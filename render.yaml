@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: findify-backend
+    runtime: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn server:app"
+    envVars:
+      - key: PORT
+        value: 5000
