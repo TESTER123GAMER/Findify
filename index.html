@@ -1,1 +1,4354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Findify - Advanced Roblox Username Checker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #e0e0ff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .background-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            opacity: 0.3;
+        }
+
+        .floating-particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .floating-particle {
+            position: absolute;
+            background: radial-gradient(circle, rgba(100, 255, 218, 0.6), transparent);
+            border-radius: 50%;
+            animation: floatUp 8s linear infinite;
+        }
+
+        @keyframes floatUp {
+            from {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            to {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #64ffda, #a29bfe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(100, 255, 218, 0.3);
+        }
+
+        /* Enhanced Navigation */
+        .navigation {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .nav-menu {
+            position: relative;
+        }
+
+        .nav-trigger {
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+            border: none;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 50%;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
+        }
+
+        .nav-trigger:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(108, 92, 231, 0.6);
+        }
+
+        .nav-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: rgba(26, 26, 46, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 10px 0;
+            min-width: 200px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            margin-top: 10px;
+        }
+
+        .nav-dropdown.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .nav-item {
+            display: block;
+            padding: 12px 20px;
+            color: #e0e0ff;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-item:hover {
+            background: rgba(100, 255, 218, 0.1);
+            color: #64ffda;
+        }
+
+        .nav-separator {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 8px 0;
+        }
+
+        .user-status {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .user-status:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            color: white;
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* Enhanced User Roles */
+        .role-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+
+        .role-owner {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+        }
+
+        .role-founder {
+            background: linear-gradient(45deg, #ffd700, #f39c12);
+            color: #000;
+        }
+
+        .role-admin {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .role-tester {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad);
+            color: white;
+        }
+
+        .role-expert {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            color: white;
+        }
+
+        .role-member {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        /* Profile Picture Styles */
+        .profile-picture {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .profile-picture-large {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            margin: 0 auto 20px;
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* Authentication Modal Styles */
+        .auth-modal {
+            display: flex;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(15px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-modal.hide {
+            display: none;
+        }
+
+        .auth-container {
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.95), rgba(22, 33, 62, 0.95));
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            width: 90%;
+            max-width: 450px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 5px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            color: #e0e0ff;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .auth-tab.active {
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+            color: white;
+            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
+        }
+
+        .auth-content {
+            display: none;
+        }
+
+        .auth-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #dcdcff;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: #e0e0ff;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #64ffda;
+            box-shadow: 0 0 0 3px rgba(100, 255, 218, 0.2);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .profile-picture-upload {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .profile-picture-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .btn {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(108, 92, 231, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #2e8b57, #3cb371);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(46, 139, 87, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #ff2a6d, #ff5c8d);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 42, 109, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 8px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+        }
+
+        .tabs {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            padding: 5px;
+            flex-wrap: wrap;
+        }
+
+        .tab-button {
+            flex: 1;
+            min-width: 120px;
+            padding: 15px 10px;
+            background: none;
+            border: none;
+            color: #e0e0ff;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .tab-button.active {
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .controls-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #dcdcff;
+        }
+
+        /* Q&A Forum Styles */
+        .forum-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .question-form {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .question-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .question-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .question-author {
+            font-weight: 600;
+            color: #a29bfe;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .question-date {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-left: auto;
+        }
+
+        .question-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #64ffda;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .question-title:hover {
+            color: #a29bfe;
+        }
+
+        .question-content {
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .question-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .question-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .admin-actions {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .admin-btn {
+            background: rgba(255, 42, 109, 0.2);
+            border: 1px solid rgba(255, 42, 109, 0.3);
+            color: #ff2a6d;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .admin-btn:hover {
+            background: rgba(255, 42, 109, 0.3);
+        }
+
+        .comments-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: none;
+        }
+
+        .comments-section.show {
+            display: block;
+        }
+
+        .comment-item {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 3px solid #64ffda;
+            position: relative;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .comment-author {
+            font-size: 12px;
+            font-weight: 600;
+            color: #a29bfe;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .comment-date {
+            font-size: 10px;
+            opacity: 0.6;
+        }
+
+        .comment-form {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .comment-input {
+            flex: 1;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #e0e0ff;
+            font-size: 12px;
+        }
+
+        /* Enhanced Statistics */
+        .results-area {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .result-item {
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            animation: slideIn 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .result-available {
+            background: rgba(144, 238, 144, 0.1);
+            border-left: 4px solid #90EE90;
+            color: #90EE90;
+        }
+
+        .result-taken {
+            background: rgba(255, 182, 193, 0.1);
+            border-left: 4px solid #FFB6C1;
+            color: #FFB6C1;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .result-action {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: inherit;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .result-action:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #64ffda, #a29bfe);
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+            background: linear-gradient(45deg, #64ffda, #a29bfe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+
+        .quick-stats {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1500;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.95), rgba(22, 33, 62, 0.95));
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 800px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            color: #e0e0ff;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            color: #ff2a6d;
+            transform: rotate(90deg);
+        }
+
+        /* Profile Modal */
+        .profile-modal .profile-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .profile-modal .user-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .user-stats .stat-card {
+            padding: 12px;
+        }
+
+        .user-stats .stat-value {
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls-panel {
+                order: -1;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .navigation {
+                position: static;
+                justify-content: center;
+                margin-bottom: 20px;
+            }
+
+            .tab-buttons {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .tab-button {
+                min-width: auto;
+            }
+        }
+
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            z-index: 10000;
+            animation: slideInRight 0.5s ease;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 300px;
+        }
+
+        .notification.success {
+            background: linear-gradient(45deg, #2e8b57, #3cb371);
+            color: white;
+        }
+
+        .notification.error {
+            background: linear-gradient(45deg, #ff2a6d, #ff5c8d);
+            color: white;
+        }
+
+        .notification.info {
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+            color: white;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+
+        /* Enhanced UI Elements */
+        .checkbox-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .checkbox-control input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #64ffda;
+        }
+
+        .theme-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .theme-option {
+            padding: 8px 16px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+
+        .theme-option.active {
+            border-color: #64ffda;
+            background: rgba(100, 255, 218, 0.2);
+            box-shadow: 0 0 15px rgba(100, 255, 218, 0.3);
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .preview-item {
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .preview-item:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: scale(1.05);
+        }
+
+        .guest-continue {
+            color: #64ffda;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .guest-continue:hover {
+            color: #a29bfe;
+            text-decoration: underline;
+        }
+
+        /* File Upload Styles */
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .file-upload input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-upload label {
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
+        }
+
+        /* Achievement System */
+        .achievement-badge {
+            display: inline-block;
+            background: linear-gradient(45deg, #ffd700, #ffed4a);
+            color: #1a1a2e;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+
+        .level-badge {
+            display: inline-block;
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+
+        /* Save indicator */
+        .save-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(100, 255, 218, 0.2);
+            border: 1px solid #64ffda;
+            border-radius: 10px;
+            padding: 8px 15px;
+            font-size: 12px;
+            color: #64ffda;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .save-indicator.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-layer">
+        <div class="floating-particles" id="floatingParticles"></div>
+    </div>
+
+    <!-- Save indicator -->
+    <div class="save-indicator" id="saveIndicator">💾 Data Saved</div>
+
+    <!-- Enhanced Navigation -->
+    <div class="navigation">
+        <div class="user-status" id="userStatus" onclick="toggleUserMenu()">
+            <div class="user-avatar" id="navUserAvatar">G</div>
+            <div id="navUserName">Guest</div>
+        </div>
+        
+        <div class="nav-menu">
+            <button class="nav-trigger" onclick="toggleNavMenu()">M</button>
+            <div class="nav-dropdown" id="navDropdown">
+                <a class="nav-item" onclick="switchMainTab('generator')">🎯 Generator</a>
+                <a class="nav-item" onclick="switchMainTab('results')">📊 Results</a>
+                <a class="nav-item" onclick="switchMainTab('statistics')">📈 Statistics</a>
+                <a class="nav-item" onclick="switchMainTab('forum')">💬 Q&A Forum</a>
+                <a class="nav-item" onclick="switchMainTab('groups')" id="navGroups" style="display: none;">👥 Groups</a>
+                <a class="nav-item" onclick="switchMainTab('achievements')">🏆 Achievements</a>
+                <div class="nav-separator"></div>
+                <a class="nav-item" onclick="openSettings()">⚙️ Settings</a>
+                <a class="nav-item" onclick="openHelp()">❓ Help</a>
+                <a class="nav-item" onclick="openDataManager()">💾 Data Manager</a>
+                <div class="nav-separator"></div>
+                <a class="nav-item" onclick="signOut()" id="signOutNav" style="display: none;">🚪 Sign Out</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Authentication Modal -->
+    <div class="auth-modal" id="authModal">
+        <div class="auth-container">
+            <h2 style="margin-bottom: 20px; color: #64ffda;">Welcome to Findify</h2>
+            
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchAuthTab('signin')">Sign In</button>
+                <button class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</button>
+            </div>
+
+            <!-- Sign In Form -->
+            <div id="signin-auth" class="auth-content active">
+                <form class="auth-form" onsubmit="handleSignIn(event)">
+                    <div class="form-group">
+                        <label>Username or Email</label>
+                        <input type="text" class="form-control" id="signinUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" class="form-control" id="signinPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-control">
+                            <input type="checkbox" id="rememberMe">
+                            Remember me
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Sign In</button>
+                </form>
+                
+                <div class="auth-options">
+                    <div class="guest-continue" onclick="continueAsGuest()">
+                        Continue as Guest
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sign Up Form -->
+            <div id="signup-auth" class="auth-content">
+                <form class="auth-form" onsubmit="handleSignUp(event)">
+                    <div class="profile-picture-upload">
+                        <div class="profile-picture-preview" id="profilePreview">U</div>
+                        <div class="file-upload">
+                            <input type="file" id="profilePictureUpload" accept="image/*" onchange="handleProfilePictureUpload(event)">
+                            <label for="profilePictureUpload">Upload Profile Picture</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" class="form-control" id="signupUsername" required 
+                               minlength="3" maxlength="20" pattern="^[a-zA-Z0-9_-]+$"
+                               title="Username can only contain letters, numbers, underscores, and hyphens"
+                               oninput="updateProfilePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" class="form-control" id="signupEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" class="form-control" id="signupPassword" required 
+                               minlength="6" title="Password must be at least 6 characters long">
+                    </div>
+                    <div class="form-group">
+                        <label>Confirm Password</label>
+                        <input type="password" class="form-control" id="signupConfirmPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Account</button>
+                </form>
+
+                <div class="auth-options">
+                    <div class="guest-continue" onclick="continueAsGuest()">
+                        Continue as Guest
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>Findify</h1>
+            <p>Advanced Roblox Username Availability Checker with Community Features</p>
+        </div>
+
+        <div class="main-content">
+            <div class="tabs">
+                <div class="tab-buttons">
+                    <button class="tab-button active" onclick="switchMainTab('generator')">Generator</button>
+                    <button class="tab-button" onclick="switchMainTab('results')">Results</button>
+                    <button class="tab-button" onclick="switchMainTab('statistics')">Statistics</button>
+                    <button class="tab-button" onclick="switchMainTab('forum')">Q&A Forum</button>
+                    <button class="tab-button" onclick="switchMainTab('groups')" id="groupsTabBtn" style="display: none;">Groups</button>
+                    <button class="tab-button" onclick="switchMainTab('achievements')">Achievements</button>
+                </div>
+
+                <div id="generator-tab" class="tab-content active">
+                    <div class="control-group">
+                        <label>Used Names: <span id="usedNamesCount">0</span></label>
+                    </div>
+                    
+                    <div class="results-area" id="previewArea">
+                        <div style="text-align: center; color: #888; margin-top: 150px;">
+                            Click "Generate Preview" to see sample usernames
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-secondary" onclick="generatePreview()" style="margin-top: 20px;">
+                        Generate Preview
+                    </button>
+                </div>
+
+                <div id="results-tab" class="tab-content">
+                    <div class="quick-stats" id="quickStats">
+                        Ready to start checking...
+                    </div>
+                    
+                    <div class="progress-bar" id="progressContainer" style="display: none;">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    
+                    <div class="results-area" id="resultsArea">
+                        <div style="text-align: center; color: #888; margin-top: 150px;">
+                            Click "Start Checking" to begin
+                        </div>
+                    </div>
+                </div>
+
+                <div id="statistics-tab" class="tab-content">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalChecks">0</div>
+                            <div class="stat-label">Total Checks</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="availableCount">0</div>
+                            <div class="stat-label">Available</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="takenCount">0</div>
+                            <div class="stat-label">Taken</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="successRate">0.0%</div>
+                            <div class="stat-label">Success Rate</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="sessionTime">00:00:00</div>
+                            <div class="stat-label">Session Time</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="checksPerSecond">0.0/s</div>
+                            <div class="stat-label">Average Speed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="bestStreak">0</div>
+                            <div class="stat-label">Best Streak</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="currentLevel">1</div>
+                            <div class="stat-label">Level</div>
+                        </div>
+                    </div>
+
+                    <div class="results-area">
+                        <h3 style="margin-bottom: 15px;">Best Available Usernames</h3>
+                        <div id="bestUsernames">No available usernames found yet.</div>
+                    </div>
+                </div>
+
+                <!-- Q&A Forum Tab -->
+                <div id="forum-tab" class="tab-content">
+                    <div class="question-form" id="questionForm">
+                        <h3 style="color: #64ffda; margin-bottom: 15px;">Ask a Question</h3>
+                        <form onsubmit="submitQuestion(event)">
+                            <div class="form-group">
+                                <label>Question Title</label>
+                                <input type="text" class="form-control" id="questionTitle" required 
+                                       maxlength="100" placeholder="What's your question about Roblox usernames?">
+                            </div>
+                            <div class="form-group">
+                                <label>Question Details</label>
+                                <textarea class="form-control" id="questionContent" rows="3" 
+                                          maxlength="500" placeholder="Provide more details about your question..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Category</label>
+                                <select class="form-control" id="questionCategory">
+                                    <option value="general">General</option>
+                                    <option value="username-tips">Username Tips</option>
+                                    <option value="availability">Availability</option>
+                                    <option value="roblox-rules">Roblox Rules</option>
+                                    <option value="technical">Technical Issues</option>
+                                    <option value="suggestions">Suggestions</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Post Question</button>
+                        </form>
+                    </div>
+
+                    <div class="forum-container" id="forumContainer">
+                        <!-- Questions will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Groups Tab -->
+                <div id="groups-tab" class="tab-content">
+                    <div class="control-group">
+                        <h3 style="color: #64ffda; margin-bottom: 15px;">📊 My Groups</h3>
+                        <div id="myGroups">
+                            <div style="text-align: center; color: #888; padding: 20px;">
+                                You haven't joined any groups yet.
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="openGroupModal('create')" style="margin-top: 15px;">
+                            Create New Group
+                        </button>
+                        <button class="btn btn-secondary" onclick="openGroupModal('join')" style="margin-top: 15px; margin-left: 10px;">
+                            Join Group
+                        </button>
+                    </div>
+
+                    <div class="control-group">
+                        <h3 style="color: #64ffda; margin-bottom: 15px;">🏆 Global Leaderboard</h3>
+                        <div id="globalLeaderboard">
+                            <!-- Leaderboard will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Achievements Tab -->
+                <div id="achievements-tab" class="tab-content">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="achievementCount">0</div>
+                            <div class="stat-label">Achievements Earned</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="achievementPoints">0</div>
+                            <div class="stat-label">Achievement Points</div>
+                        </div>
+                    </div>
+
+                    <div class="results-area">
+                        <h3 style="margin-bottom: 15px;">🏆 Your Achievements</h3>
+                        <div id="achievementsList">
+                            <!-- Achievements will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls-panel">
+                <div class="control-group">
+                    <label>Visual Theme</label>
+                    <div class="theme-selector">
+                        <div class="theme-option active" onclick="setTheme('galaxy')">Galaxy</div>
+                        <div class="theme-option" onclick="setTheme('cyberpunk')">Cyberpunk</div>
+                        <div class="theme-option" onclick="setTheme('nature')">Nature</div>
+                        <div class="theme-option" onclick="setTheme('dark')">Dark</div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label for="mode">Username Generation Mode</label>
+                    <select class="form-control" id="mode" onchange="onModeChange()">
+                        <option value="random">Random</option>
+                        <option value="coherent">Very Coherent</option>
+                        <option value="custom">Custom</option>
+                        <option value="jesus">Jesus</option>
+                        <option value="emo">Emo</option>
+                        <option value="love">Love</option>
+                        <option value="life">Life</option>
+                        <option value="romance">Romance</option>
+                        <option value="gamer">Gamer</option>
+                        <option value="cool">Cool</option>
+                    </select>
+                </div>
+
+                <div class="control-group" id="customThemeControls" style="display: none;">
+                    <label for="customWord">Custom Theme Word</label>
+                    <input type="text" class="form-control" id="customWord" 
+                           placeholder="Enter a word (e.g., 'light', 'shadow', 'cosmic')"
+                           oninput="onCustomWordChange()">
+                    <button class="btn btn-secondary" id="createThemeBtn" 
+                            onclick="createCustomTheme()" style="margin-top: 10px;">
+                        Create Custom Theme
+                    </button>
+                </div>
+
+                <div class="control-group">
+                    <label for="style">Style (for Very Coherent Mode)</label>
+                    <select class="form-control" id="style">
+                        <option value="star">Star</option>
+                        <option value="nova">Nova</option>
+                        <option value="light">Light</option>
+                        <option value="dream">Dream</option>
+                        <option value="blue">Blue</option>
+                        <option value="fire">Fire</option>
+                        <option value="cloud">Cloud</option>
+                        <option value="moon">Moon</option>
+                        <option value="sun">Sun</option>
+                        <option value="void">Void</option>
+                        <option value="crystal">Crystal</option>
+                        <option value="pixel">Pixel</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="length">Username Length</label>
+                    <input type="number" class="form-control" id="length" 
+                           min="3" max="20" value="8">
+                </div>
+
+                <div class="control-group">
+                    <label class="checkbox-control">
+                        <input type="checkbox" id="includeNumbers">
+                        Include Numbers
+                    </label>
+                </div>
+
+                <div class="control-group">
+                    <label for="speed">Check Interval (ms)</label>
+                    <input type="number" class="form-control" id="speed" 
+                           min="100" max="5000" value="1000" step="100">
+                </div>
+
+                <div class="control-group">
+                    <button class="btn btn-secondary" onclick="resetStatistics()">
+                        Reset Statistics
+                    </button>
+                </div>
+
+                <div class="control-group">
+                    <button class="btn btn-secondary" onclick="exportStatistics()">
+                        Export Statistics
+                    </button>
+                </div>
+
+                <div class="control-group" style="margin-top: 30px;">
+                    <button class="btn btn-primary" id="startBtn" onclick="startChecking()">
+                        Start Checking
+                    </button>
+                </div>
+
+                <div class="control-group">
+                    <button class="btn btn-danger" id="stopBtn" onclick="stopChecking()" disabled>
+                        Stop Checking
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div class="modal profile-modal" id="profileModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeProfileModal()">&times;</span>
+            <div class="profile-section">
+                <div class="profile-picture-large" id="profilePictureLarge">U</div>
+                <h2 id="profileUsername">Username</h2>
+                <div id="profileRoles"></div>
+                <p id="profileEmail">email@example.com</p>
+                <p style="font-size: 12px; opacity: 0.7;" id="profileJoinDate">Joined: Date</p>
+            </div>
+            
+            <div class="user-stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="profileLevel">1</div>
+                    <div class="stat-label">Level</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="profileExp">0</div>
+                    <div class="stat-label">Experience</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="profileChecks">0</div>
+                    <div class="stat-label">Total Checks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="profileFound">0</div>
+                    <div class="stat-label">Found</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="profileQuestions">0</div>
+                    <div class="stat-label">Questions Asked</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="profileAnswers">0</div>
+                    <div class="stat-label">Answers Given</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <h3 style="color: #64ffda; margin-bottom: 15px;">🏆 Recent Achievements</h3>
+                <div id="profileAchievements">
+                    <!-- User achievements will be displayed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeSettings()">&times;</span>
+            <h2 style="color: #64ffda; margin-bottom: 20px;">Settings</h2>
+            
+            <div class="form-group">
+                <label class="checkbox-control">
+                    <input type="checkbox" id="autoSave" checked>
+                    Auto-save progress
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label class="checkbox-control">
+                    <input type="checkbox" id="soundEffects">
+                    Enable sound effects
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label class="checkbox-control">
+                    <input type="checkbox" id="notifications" checked>
+                    Show notifications
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label for="maxResults">Maximum results to display</label>
+                <input type="number" class="form-control" id="maxResults" 
+                       min="50" max="1000" value="100">
+            </div>
+
+            <div class="form-group">
+                <label class="checkbox-control">
+                    <input type="checkbox" id="saveResults" checked>
+                    Save results history
+                </label>
+            </div>
+
+            <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeHelp()">&times;</span>
+            <h2 style="color: #64ffda; margin-bottom: 20px;">Help & Guide</h2>
+            
+            <div style="line-height: 1.6;">
+                <h3 style="color: #a29bfe; margin-top: 20px;">Getting Started</h3>
+                <p>1. Choose a username generation mode from the dropdown<br>
+                2. Set your preferred length and options<br>
+                3. Click "Start Checking" to begin finding available usernames</p>
+
+                <h3 style="color: #a29bfe; margin-top: 20px;">Generation Modes</h3>
+                <p><strong>Random:</strong> Generates completely random usernames<br>
+                <strong>Coherent:</strong> Creates themed usernames based on style<br>
+                <strong>Themed:</strong> Uses specific word themes (Jesus, Emo, Love, etc.)<br>
+                <strong>Custom:</strong> Create your own theme with custom words</p>
+
+                <h3 style="color: #a29bfe; margin-top: 20px;">Features</h3>
+                <p><strong>Q&A Forum:</strong> Ask questions and get help from the community<br>
+                <strong>Groups:</strong> Join groups to compete and share progress<br>
+                <strong>Achievements:</strong> Unlock achievements as you use the tool<br>
+                <strong>Statistics:</strong> Track your progress and success rates</p>
+
+                <h3 style="color: #a29bfe; margin-top: 20px;">Data Saving</h3>
+                <p><strong>Auto-Save:</strong> Your progress is automatically saved<br>
+                <strong>Export:</strong> Export your data to backup files<br>
+                <strong>Import:</strong> Import previous data from backup files<br>
+                <strong>Data Manager:</strong> Manage all your saved data</p>
+
+                <h3 style="color: #a29bfe; margin-top: 20px;">Tips</h3>
+                <p>• Shorter usernames are more likely to be taken<br>
+                • Try different themes and modes for variety<br>
+                • Join groups to learn from experienced users<br>
+                • Check the forum for community tips and tricks</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Manager Modal -->
+    <div class="modal" id="dataManagerModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeDataManager()">&times;</span>
+            <h2 style="color: #64ffda; margin-bottom: 20px;">💾 Data Manager</h2>
+            
+            <div class="stats-grid" style="margin-bottom: 30px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="dataSize">0 KB</div>
+                    <div class="stat-label">Data Size</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="lastSave">Never</div>
+                    <div class="stat-label">Last Save</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="backupCount">0</div>
+                    <div class="stat-label">Backups</div>
+                </div>
+            </div>
+
+            <h3 style="color: #a29bfe; margin-bottom: 15px;">Export Data</h3>
+            <div style="margin-bottom: 20px;">
+                <button class="btn btn-secondary" onclick="exportAllData()">Export All Data</button>
+                <button class="btn btn-secondary" onclick="exportUserData()" style="margin-left: 10px;">Export User Data Only</button>
+                <button class="btn btn-secondary" onclick="exportSettings()" style="margin-left: 10px;">Export Settings Only</button>
+            </div>
+
+            <h3 style="color: #a29bfe; margin-bottom: 15px;">Import Data</h3>
+            <div class="file-upload" style="margin-bottom: 20px;">
+                <input type="file" id="importFile" accept=".json" onchange="handleImport(event)">
+                <label for="importFile">Choose File to Import</label>
+            </div>
+
+            <h3 style="color: #a29bfe; margin-bottom: 15px;">Data Management</h3>
+            <div>
+                <button class="btn btn-primary" onclick="createBackup()">Create Backup</button>
+                <button class="btn btn-secondary" onclick="loadBackup()" style="margin-left: 10px;">Load Latest Backup</button>
+                <button class="btn btn-danger" onclick="clearAllData()" style="margin-left: 10px;">Clear All Data</button>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <h3 style="color: #a29bfe; margin-bottom: 15px;">Auto-Backup Status</h3>
+                <div class="form-group">
+                    <label class="checkbox-control">
+                        <input type="checkbox" id="autoBackup" onchange="toggleAutoBackup()">
+                        Enable automatic backups (every 30 minutes)
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Group Modal -->
+    <div class="modal" id="groupModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeGroupModal()">&times;</span>
+            
+            <div id="createGroupContent">
+                <h2 style="color: #64ffda; margin-bottom: 20px;">Create New Group</h2>
+                
+                <form onsubmit="createGroup(event)">
+                    <div class="form-group">
+                        <label>Group Name</label>
+                        <input type="text" class="form-control" id="groupName" required 
+                               maxlength="30" placeholder="Enter group name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea class="form-control" id="groupDescription" rows="3" 
+                                  maxlength="200" placeholder="Brief description of your group"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="checkbox-control">
+                            <input type="checkbox" id="groupPrivate">
+                            Private Group (invite only)
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Create Group</button>
+                </form>
+            </div>
+
+            <div id="joinGroupContent" style="display: none;">
+                <h2 style="color: #64ffda; margin-bottom: 20px;">Join Group</h2>
+                
+                <form onsubmit="joinGroup(event)">
+                    <div class="form-group">
+                        <label>Group ID or Invite Code</label>
+                        <input type="text" class="form-control" id="groupCode" required 
+                               placeholder="Enter group ID or invite code">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Join Group</button>
+                </form>
+
+                <div style="margin-top: 30px;">
+                    <h3 style="color: #a29bfe; margin-bottom: 15px;">Public Groups</h3>
+                    <div id="publicGroups">
+                        <!-- Public groups will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Enhanced Global Variables with Comprehensive Save System
+        let isChecking = false;
+        let checkInterval = null;
+        let usedNames = new Set();
+        let customThemes = {};
+        let isAuthenticated = false;
+        let currentUser = null;
+        let userGroups = [];
+        let startTime = null;
+        let currentActiveTab = 'generator';
+        let savedComments = {};
+        let autoSaveInterval = null;
+        let autoBackupInterval = null;
+        let lastSaveTime = null;
+        let savedResults = [];
+
+        let statistics = {
+            total: 0,
+            available: 0,
+            taken: 0,
+            sessionStart: null,
+            bestUsernames: [],
+            modeStats: {},
+            lengthStats: {},
+            currentStreak: 0,
+            bestStreak: 0,
+            achievements: new Set(),
+            achievementPoints: 0,
+            allTimeStats: {
+                totalChecks: 0,
+                availableFound: 0,
+                sessionsPlayed: 0,
+                timeSpent: 0
+            }
+        };
+
+        // User Roles System
+        const USER_ROLES = {
+            OWNER: { name: 'Owner', level: 5, color: 'role-owner', permissions: ['delete_posts', 'ban_users', 'edit_users', 'manage_site'] },
+            FOUNDER: { name: 'Founder', level: 4, color: 'role-founder', permissions: ['delete_posts', 'ban_users', 'edit_users'] },
+            ADMIN: { name: 'Admin', level: 3, color: 'role-admin', permissions: ['delete_posts', 'moderate'] },
+            TESTER: { name: 'Tester', level: 2, color: 'role-tester', permissions: ['test_features'] },
+            EXPERT: { name: 'Expert', level: 2, color: 'role-expert', permissions: ['help_users'] },
+            MEMBER: { name: 'Member', level: 1, color: 'role-member', permissions: ['post', 'comment'] }
+        };
+
+        // Special Users with Roles
+        const SPECIAL_USERS = {
+            'findifyowner': { role: 'OWNER', profilePicture: 'https://via.placeholder.com/80/ff6b6b/ffffff?text=O' },
+            'findifydev': { role: 'FOUNDER', profilePicture: 'https://via.placeholder.com/80/ffd700/000000?text=F' },
+            'findifyadmin': { role: 'ADMIN', profilePicture: 'https://via.placeholder.com/80/e74c3c/ffffff?text=A' },
+            'betatester1': { role: 'TESTER', profilePicture: 'https://via.placeholder.com/80/9b59b6/ffffff?text=T' },
+            'betatester2': { role: 'TESTER', profilePicture: 'https://via.placeholder.com/80/9b59b6/ffffff?text=T' },
+            'expertuserhelper': { role: 'EXPERT', profilePicture: 'https://via.placeholder.com/80/2ecc71/ffffff?text=E' },
+            'prohunter': { role: 'EXPERT', profilePicture: 'https://via.placeholder.com/80/2ecc71/ffffff?text=P' },
+            'expertnamer': { role: 'EXPERT', profilePicture: 'https://via.placeholder.com/80/2ecc71/ffffff?text=E' }
+        };
+
+        // Enhanced Storage System with Comprehensive Data Management
+        const STORAGE_KEYS = {
+            users: 'findify_users_v2',
+            currentUser: 'findify_current_user_v2',
+            rememberUser: 'findify_remember_user_v2',
+            settings: 'findify_settings_v2',
+            statistics: 'findify_statistics_v2',
+            questions: 'findify_questions_v2',
+            groups: 'findify_groups_v2',
+            comments: 'findify_comments_v2',
+            customThemes: 'findify_custom_themes_v2',
+            results: 'findify_results_v2',
+            achievements: 'findify_achievements_v2',
+            userProgress: 'findify_user_progress_v2',
+            appSettings: 'findify_app_settings_v2',
+            backups: 'findify_backups_v2',
+            lastSave: 'findify_last_save_v2'
+        };
+
+        // Persistent Data Storage - Enhanced with Real localStorage Support
+        let users = {};
+        let questions = [];
+        let groups = {};
+        let profilePictures = {};
+        let appSettings = {
+            autoSave: true,
+            autoBackup: false,
+            saveResults: true,
+            maxResults: 100,
+            soundEffects: false,
+            notifications: true,
+            theme: 'galaxy'
+        };
+
+        // Enhanced Data Management Functions
+        function saveAllData() {
+            try {
+                // Save user data
+                if (users && Object.keys(users).length > 0) {
+                    localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
+                }
+
+                // Save current user
+                if (currentUser) {
+                    localStorage.setItem(STORAGE_KEYS.currentUser, JSON.stringify(currentUser));
+                }
+
+                // Save questions and comments
+                if (questions && questions.length > 0) {
+                    localStorage.setItem(STORAGE_KEYS.questions, JSON.stringify(questions));
+                }
+                if (savedComments && Object.keys(savedComments).length > 0) {
+                    localStorage.setItem(STORAGE_KEYS.comments, JSON.stringify(savedComments));
+                }
+
+                // Save groups
+                if (groups && Object.keys(groups).length > 0) {
+                    localStorage.setItem(STORAGE_KEYS.groups, JSON.stringify(groups));
+                }
+
+                // Save statistics
+                const statsToSave = {
+                    ...statistics,
+                    achievements: Array.from(statistics.achievements),
+                    usedNames: Array.from(usedNames)
+                };
+                localStorage.setItem(STORAGE_KEYS.statistics, JSON.stringify(statsToSave));
+
+                // Save custom themes
+                if (customThemes && Object.keys(customThemes).length > 0) {
+                    localStorage.setItem(STORAGE_KEYS.customThemes, JSON.stringify(customThemes));
+                }
+
+                // Save results if enabled
+                if (appSettings.saveResults && savedResults.length > 0) {
+                    localStorage.setItem(STORAGE_KEYS.results, JSON.stringify(savedResults));
+                }
+
+                // Save app settings
+                localStorage.setItem(STORAGE_KEYS.appSettings, JSON.stringify(appSettings));
+
+                // Save control settings
+                const controls = {
+                    mode: document.getElementById('mode').value,
+                    style: document.getElementById('style').value,
+                    length: document.getElementById('length').value,
+                    includeNumbers: document.getElementById('includeNumbers').checked,
+                    speed: document.getElementById('speed').value,
+                    customWord: document.getElementById('customWord').value
+                };
+                localStorage.setItem('findify_controls', JSON.stringify(controls));
+
+                // Update last save time
+                lastSaveTime = new Date();
+                localStorage.setItem(STORAGE_KEYS.lastSave, lastSaveTime.toISOString());
+
+                showSaveIndicator();
+                console.log('All data saved successfully');
+                return true;
+            } catch (error) {
+                console.error('Error saving data:', error);
+                showNotification('Error saving data!', 'error');
+                return false;
+            }
+        }
+
+        function loadAllData() {
+            try {
+                // Load users
+                const storedUsers = localStorage.getItem(STORAGE_KEYS.users);
+                if (storedUsers) {
+                    users = JSON.parse(storedUsers);
+                }
+
+                // Load questions
+                const storedQuestions = localStorage.getItem(STORAGE_KEYS.questions);
+                if (storedQuestions) {
+                    questions = JSON.parse(storedQuestions);
+                } else {
+                    initializeSampleData();
+                }
+
+                // Load comments
+                const storedComments = localStorage.getItem(STORAGE_KEYS.comments);
+                if (storedComments) {
+                    savedComments = JSON.parse(storedComments);
+                    // Merge comments back into questions
+                    questions.forEach(question => {
+                        if (savedComments[question.id]) {
+                            question.comments = savedComments[question.id];
+                        }
+                    });
+                }
+
+                // Load groups
+                const storedGroups = localStorage.getItem(STORAGE_KEYS.groups);
+                if (storedGroups) {
+                    groups = JSON.parse(storedGroups);
+                } else {
+                    initializeSampleGroups();
+                }
+
+                // Load statistics
+                const storedStats = localStorage.getItem(STORAGE_KEYS.statistics);
+                if (storedStats) {
+                    const loadedStats = JSON.parse(storedStats);
+                    statistics = {
+                        ...statistics,
+                        ...loadedStats,
+                        achievements: new Set(loadedStats.achievements || [])
+                    };
+                    if (loadedStats.usedNames) {
+                        usedNames = new Set(loadedStats.usedNames);
+                    }
+                }
+
+                // Load custom themes
+                const storedThemes = localStorage.getItem(STORAGE_KEYS.customThemes);
+                if (storedThemes) {
+                    customThemes = JSON.parse(storedThemes);
+                }
+
+                // Load results
+                const storedResults = localStorage.getItem(STORAGE_KEYS.results);
+                if (storedResults) {
+                    savedResults = JSON.parse(storedResults);
+                }
+
+                // Load app settings
+                const storedAppSettings = localStorage.getItem(STORAGE_KEYS.appSettings);
+                if (storedAppSettings) {
+                    appSettings = { ...appSettings, ...JSON.parse(storedAppSettings) };
+                }
+
+                // Load control settings
+                const storedControls = localStorage.getItem('findify_controls');
+                if (storedControls) {
+                    const controls = JSON.parse(storedControls);
+                    document.getElementById('mode').value = controls.mode || 'random';
+                    document.getElementById('style').value = controls.style || 'star';
+                    document.getElementById('length').value = controls.length || 8;
+                    document.getElementById('includeNumbers').checked = controls.includeNumbers || false;
+                    document.getElementById('speed').value = controls.speed || 1000;
+                    document.getElementById('customWord').value = controls.customWord || '';
+                }
+
+                // Load last save time
+                const storedLastSave = localStorage.getItem(STORAGE_KEYS.lastSave);
+                if (storedLastSave) {
+                    lastSaveTime = new Date(storedLastSave);
+                }
+
+                // Check for remembered user
+                const rememberedUser = localStorage.getItem(STORAGE_KEYS.rememberUser);
+                if (rememberedUser) {
+                    const userData = users[rememberedUser.toLowerCase()];
+                    if (userData) {
+                        currentUser = userData;
+                        isAuthenticated = true;
+                        document.getElementById('authModal').classList.add('hide');
+                        initializeAuthenticatedUser();
+                    }
+                }
+
+                console.log('All data loaded successfully');
+                return true;
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showNotification('Error loading data!', 'error');
+                return false;
+            }
+        }
+
+        function showSaveIndicator() {
+            const indicator = document.getElementById('saveIndicator');
+            indicator.classList.add('show');
+            setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 2000);
+        }
+
+        function autoSaveData() {
+            if (appSettings.autoSave) {
+                saveAllData();
+            }
+        }
+
+        function startAutoSave() {
+            if (autoSaveInterval) {
+                clearInterval(autoSaveInterval);
+            }
+            if (appSettings.autoSave) {
+                autoSaveInterval = setInterval(autoSaveData, 30000); // Save every 30 seconds
+                console.log('Auto-save enabled (30 second intervals)');
+            }
+        }
+
+        function stopAutoSave() {
+            if (autoSaveInterval) {
+                clearInterval(autoSaveInterval);
+                autoSaveInterval = null;
+                console.log('Auto-save disabled');
+            }
+        }
+
+        // Enhanced Data Export Functions
+        function exportAllData() {
+            const exportData = {
+                version: '2.0',
+                timestamp: new Date().toISOString(),
+                users: users,
+                questions: questions,
+                groups: groups,
+                statistics: {
+                    ...statistics,
+                    achievements: Array.from(statistics.achievements),
+                    usedNames: Array.from(usedNames)
+                },
+                customThemes: customThemes,
+                results: appSettings.saveResults ? savedResults : [],
+                appSettings: appSettings,
+                comments: savedComments,
+                profilePictures: profilePictures,
+                currentUser: currentUser
+            };
+
+            downloadJson(exportData, `findify-complete-backup-${new Date().toISOString().split('T')[0]}.json`);
+            showNotification('Complete data exported successfully!', 'success');
+        }
+
+        function exportUserData() {
+            if (!currentUser) {
+                showNotification('No user data to export!', 'error');
+                return;
+            }
+
+            const exportData = {
+                version: '2.0',
+                timestamp: new Date().toISOString(),
+                type: 'user_data',
+                user: currentUser,
+                statistics: {
+                    ...statistics,
+                    achievements: Array.from(statistics.achievements)
+                },
+                groups: userGroups,
+                customThemes: customThemes,
+                results: appSettings.saveResults ? savedResults.filter(r => r.userId === currentUser.username) : []
+            };
+
+            downloadJson(exportData, `findify-user-${currentUser.username}-${new Date().toISOString().split('T')[0]}.json`);
+            showNotification('User data exported successfully!', 'success');
+        }
+
+        function exportSettings() {
+            const exportData = {
+                version: '2.0',
+                timestamp: new Date().toISOString(),
+                type: 'settings',
+                appSettings: appSettings,
+                customThemes: customThemes,
+                controls: {
+                    mode: document.getElementById('mode').value,
+                    style: document.getElementById('style').value,
+                    length: document.getElementById('length').value,
+                    includeNumbers: document.getElementById('includeNumbers').checked,
+                    speed: document.getElementById('speed').value,
+                    customWord: document.getElementById('customWord').value
+                }
+            };
+
+            downloadJson(exportData, `findify-settings-${new Date().toISOString().split('T')[0]}.json`);
+            showNotification('Settings exported successfully!', 'success');
+        }
+
+        function downloadJson(data, filename) {
+            const jsonStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Enhanced Data Import Functions
+        function handleImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importData = JSON.parse(e.target.result);
+                    importJson(importData);
+                } catch (error) {
+                    console.error('Import error:', error);
+                    showNotification('Invalid file format!', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function importJson(data) {
+            if (!data.version || !data.timestamp) {
+                showNotification('Invalid backup file format!', 'error');
+                return;
+            }
+
+            if (!confirm('This will overwrite your current data. Are you sure you want to continue?')) {
+                return;
+            }
+
+            try {
+                // Import based on data type
+                if (data.type === 'user_data') {
+                    // Import user-specific data
+                    if (data.user && data.statistics) {
+                        if (!currentUser) {
+                            currentUser = data.user;
+                            isAuthenticated = true;
+                            initializeAuthenticatedUser();
+                        }
+                        
+                        // Merge statistics
+                        statistics = {
+                            ...statistics,
+                            ...data.statistics,
+                            achievements: new Set(data.statistics.achievements || [])
+                        };
+                        
+                        if (data.customThemes) {
+                            customThemes = { ...customThemes, ...data.customThemes };
+                        }
+                        
+                        if (data.results && appSettings.saveResults) {
+                            savedResults = [...savedResults, ...data.results];
+                        }
+                    }
+                } else if (data.type === 'settings') {
+                    // Import settings only
+                    if (data.appSettings) {
+                        appSettings = { ...appSettings, ...data.appSettings };
+                        applySettings();
+                    }
+                    if (data.customThemes) {
+                        customThemes = { ...customThemes, ...data.customThemes };
+                    }
+                    if (data.controls) {
+                        const controls = data.controls;
+                        document.getElementById('mode').value = controls.mode || 'random';
+                        document.getElementById('style').value = controls.style || 'star';
+                        document.getElementById('length').value = controls.length || 8;
+                        document.getElementById('includeNumbers').checked = controls.includeNumbers || false;
+                        document.getElementById('speed').value = controls.speed || 1000;
+                        document.getElementById('customWord').value = controls.customWord || '';
+                    }
+                } else {
+                    // Import complete backup
+                    if (data.users) users = data.users;
+                    if (data.questions) questions = data.questions;
+                    if (data.groups) groups = data.groups;
+                    if (data.comments) savedComments = data.comments;
+                    if (data.customThemes) customThemes = data.customThemes;
+                    if (data.appSettings) {
+                        appSettings = { ...appSettings, ...data.appSettings };
+                        applySettings();
+                    }
+                    if (data.profilePictures) profilePictures = data.profilePictures;
+                    
+                    if (data.statistics) {
+                        statistics = {
+                            ...statistics,
+                            ...data.statistics,
+                            achievements: new Set(data.statistics.achievements || [])
+                        };
+                        if (data.statistics.usedNames) {
+                            usedNames = new Set(data.statistics.usedNames);
+                        }
+                    }
+                    
+                    if (data.results && appSettings.saveResults) {
+                        savedResults = data.results;
+                    }
+                    
+                    if (data.currentUser && !currentUser) {
+                        currentUser = data.currentUser;
+                        isAuthenticated = true;
+                        initializeAuthenticatedUser();
+                    }
+                }
+
+                // Save imported data
+                saveAllData();
+                
+                // Update displays
+                updateStatisticsDisplay();
+                updateAchievementsDisplay();
+                loadForumQuestions();
+                updateGroupsDisplay();
+                updateDataManagerDisplay();
+                
+                showNotification('Data imported successfully!', 'success');
+                document.getElementById('importFile').value = '';
+            } catch (error) {
+                console.error('Import error:', error);
+                showNotification('Error importing data!', 'error');
+            }
+        }
+
+        // Backup System
+        function createBackup() {
+            const backups = JSON.parse(localStorage.getItem(STORAGE_KEYS.backups) || '[]');
+            const backup = {
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                data: {
+                    users: users,
+                    questions: questions,
+                    groups: groups,
+                    statistics: {
+                        ...statistics,
+                        achievements: Array.from(statistics.achievements),
+                        usedNames: Array.from(usedNames)
+                    },
+                    customThemes: customThemes,
+                    comments: savedComments,
+                    appSettings: appSettings,
+                    currentUser: currentUser
+                }
+            };
+
+            backups.push(backup);
+            
+            // Keep only last 5 backups
+            if (backups.length > 5) {
+                backups.splice(0, backups.length - 5);
+            }
+            
+            localStorage.setItem(STORAGE_KEYS.backups, JSON.stringify(backups));
+            updateDataManagerDisplay();
+            showNotification('Backup created successfully!', 'success');
+        }
+
+        function loadBackup() {
+            const backups = JSON.parse(localStorage.getItem(STORAGE_KEYS.backups) || '[]');
+            if (backups.length === 0) {
+                showNotification('No backups found!', 'error');
+                return;
+            }
+
+            if (!confirm('This will restore your data to the latest backup. Continue?')) {
+                return;
+            }
+
+            const latestBackup = backups[backups.length - 1];
+            importJson({ ...latestBackup.data, version: '2.0', timestamp: latestBackup.timestamp });
+        }
+
+        function toggleAutoBackup() {
+            const enabled = document.getElementById('autoBackup').checked;
+            appSettings.autoBackup = enabled;
+            
+            if (enabled) {
+                startAutoBackup();
+            } else {
+                stopAutoBackup();
+            }
+            
+            saveAllData();
+        }
+
+        function startAutoBackup() {
+            if (autoBackupInterval) {
+                clearInterval(autoBackupInterval);
+            }
+            if (appSettings.autoBackup) {
+                autoBackupInterval = setInterval(createBackup, 30 * 60 * 1000); // Every 30 minutes
+                console.log('Auto-backup enabled (30 minute intervals)');
+            }
+        }
+
+        function stopAutoBackup() {
+            if (autoBackupInterval) {
+                clearInterval(autoBackupInterval);
+                autoBackupInterval = null;
+                console.log('Auto-backup disabled');
+            }
+        }
+
+        function clearAllData() {
+            if (!confirm('This will permanently delete ALL your data. This action cannot be undone. Are you sure?')) {
+                return;
+            }
+
+            if (!confirm('Last warning: This will delete everything including your account, statistics, and settings. Continue?')) {
+                return;
+            }
+
+            try {
+                // Clear all localStorage
+                Object.values(STORAGE_KEYS).forEach(key => {
+                    localStorage.removeItem(key);
+                });
+                localStorage.removeItem('findify_controls');
+
+                // Reset all variables
+                users = {};
+                questions = [];
+                groups = {};
+                savedComments = {};
+                customThemes = {};
+                savedResults = [];
+                usedNames = new Set();
+                currentUser = null;
+                isAuthenticated = false;
+                userGroups = [];
+                statistics = {
+                    total: 0,
+                    available: 0,
+                    taken: 0,
+                    sessionStart: null,
+                    bestUsernames: [],
+                    modeStats: {},
+                    lengthStats: {},
+                    currentStreak: 0,
+                    bestStreak: 0,
+                    achievements: new Set(),
+                    achievementPoints: 0,
+                    allTimeStats: {
+                        totalChecks: 0,
+                        availableFound: 0,
+                        sessionsPlayed: 0,
+                        timeSpent: 0
+                    }
+                };
+
+                // Reset UI
+                document.getElementById('authModal').classList.remove('hide');
+                document.getElementById('groupsTabBtn').style.display = 'none';
+                document.getElementById('navGroups').style.display = 'none';
+                document.getElementById('signOutNav').style.display = 'none';
+                
+                // Reset nav avatar
+                const navAvatar = document.getElementById('navUserAvatar');
+                navAvatar.style.backgroundImage = 'none';
+                navAvatar.textContent = 'G';
+                document.getElementById('navUserName').textContent = 'Guest';
+
+                updateStatisticsDisplay();
+                updateAchievementsDisplay();
+                initializeSampleData();
+                initializeSampleGroups();
+                closeDataManager();
+                
+                showNotification('All data cleared successfully!', 'success');
+            } catch (error) {
+                console.error('Error clearing data:', error);
+                showNotification('Error clearing data!', 'error');
+            }
+        }
+
+        // Data Manager Modal Functions
+        function openDataManager() {
+            document.getElementById('navDropdown').classList.remove('show');
+            document.getElementById('dataManagerModal').classList.add('show');
+            updateDataManagerDisplay();
+        }
+
+        function closeDataManager() {
+            document.getElementById('dataManagerModal').classList.remove('show');
+        }
+
+        function updateDataManagerDisplay() {
+            // Calculate data size
+            let totalSize = 0;
+            Object.values(STORAGE_KEYS).forEach(key => {
+                const item = localStorage.getItem(key);
+                if (item) {
+                    totalSize += new Blob([item]).size;
+                }
+            });
+            
+            document.getElementById('dataSize').textContent = (totalSize / 1024).toFixed(1) + ' KB';
+            document.getElementById('lastSave').textContent = lastSaveTime ? 
+                lastSaveTime.toLocaleString() : 'Never';
+            
+            const backups = JSON.parse(localStorage.getItem(STORAGE_KEYS.backups) || '[]');
+            document.getElementById('backupCount').textContent = backups.length;
+            
+            document.getElementById('autoBackup').checked = appSettings.autoBackup;
+        }
+
+        // Enhanced Settings Functions
+        function applySettings() {
+            // Apply auto-save setting
+            if (appSettings.autoSave) {
+                startAutoSave();
+            } else {
+                stopAutoSave();
+            }
+
+            // Apply auto-backup setting
+            if (appSettings.autoBackup) {
+                startAutoBackup();
+            } else {
+                stopAutoBackup();
+            }
+
+            // Update settings UI
+            document.getElementById('autoSave').checked = appSettings.autoSave;
+            document.getElementById('soundEffects').checked = appSettings.soundEffects;
+            document.getElementById('notifications').checked = appSettings.notifications;
+            document.getElementById('maxResults').value = appSettings.maxResults;
+            document.getElementById('saveResults').checked = appSettings.saveResults;
+        }
+
+        function saveSettings() {
+            appSettings = {
+                autoSave: document.getElementById('autoSave').checked,
+                soundEffects: document.getElementById('soundEffects').checked,
+                notifications: document.getElementById('notifications').checked,
+                maxResults: parseInt(document.getElementById('maxResults').value),
+                saveResults: document.getElementById('saveResults').checked,
+                autoBackup: appSettings.autoBackup,
+                theme: appSettings.theme
+            };
+
+            applySettings();
+            saveAllData();
+            showNotification('Settings saved successfully!', 'success');
+            closeSettings();
+        }
+
+        // Enhanced Result Saving
+        function saveResult(result) {
+            if (!appSettings.saveResults) return;
+
+            const resultData = {
+                ...result,
+                timestamp: new Date().toISOString(),
+                userId: currentUser ? currentUser.username : 'guest',
+                sessionId: statistics.sessionStart ? statistics.sessionStart.toISOString() : null
+            };
+
+            savedResults.push(resultData);
+
+            // Keep only recent results (max 1000)
+            if (savedResults.length > 1000) {
+                savedResults = savedResults.slice(-1000);
+            }
+
+            // Auto-save if enabled
+            if (appSettings.autoSave) {
+                autoSaveData();
+            }
+        }
+
+        // User Role Management Functions
+        function getUserRole(username) {
+            const lowerUsername = username.toLowerCase();
+            if (SPECIAL_USERS[lowerUsername]) {
+                return SPECIAL_USERS[lowerUsername].role;
+            }
+            return 'MEMBER';
+        }
+
+        function getUserRoleInfo(username) {
+            const role = getUserRole(username);
+            return USER_ROLES[role] || USER_ROLES.MEMBER;
+        }
+
+        function canUserDeletePost(username) {
+            const roleInfo = getUserRoleInfo(username);
+            return roleInfo.permissions.includes('delete_posts');
+        }
+
+        function getUserProfilePicture(username) {
+            const lowerUsername = username.toLowerCase();
+            if (SPECIAL_USERS[lowerUsername] && SPECIAL_USERS[lowerUsername].profilePicture) {
+                return SPECIAL_USERS[lowerUsername].profilePicture;
+            }
+            
+            // Check if user has uploaded profile picture
+            if (profilePictures[lowerUsername]) {
+                return profilePictures[lowerUsername];
+            }
+            
+            return null;
+        }
+
+        function renderUserWithRole(username, showAvatar = true) {
+            const roleInfo = getUserRoleInfo(username);
+            const profilePic = getUserProfilePicture(username);
+            
+            let html = '';
+            
+            if (showAvatar) {
+                html += `<div class="user-avatar" style="width: 20px; height: 20px; font-size: 10px;">`;
+                if (profilePic) {
+                    html += `<img src="${profilePic}" class="profile-picture" alt="${username}">`;
+                } else {
+                    html += username.charAt(0).toUpperCase();
+                }
+                html += `</div>`;
+            }
+            
+            html += `<span>${username}</span>`;
+            html += `<span class="role-badge ${roleInfo.color}">${roleInfo.name}</span>`;
+            
+            return html;
+        }
+
+        // Profile Picture Management
+        function handleProfilePictureUpload(event) {
+            const file = event.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imageUrl = e.target.result;
+                    document.getElementById('profilePreview').style.backgroundImage = `url(${imageUrl})`;
+                    document.getElementById('profilePreview').style.backgroundSize = 'cover';
+                    document.getElementById('profilePreview').textContent = '';
+                    
+                    // Store for signup
+                    window.tempProfilePicture = imageUrl;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function updateProfilePreview() {
+            const username = document.getElementById('signupUsername').value.trim();
+            const preview = document.getElementById('profilePreview');
+            
+            if (!window.tempProfilePicture && username) {
+                preview.textContent = username.charAt(0).toUpperCase();
+            }
+        }
+
+        // Achievement System
+        const achievements = {
+            'first_check': { name: 'First Steps', desc: 'Check your first username', points: 10, icon: '🎯' },
+            'hundred_checks': { name: 'Century Club', desc: 'Check 100 usernames', points: 50, icon: '💯' },
+            'first_available': { name: 'Jackpot!', desc: 'Find your first available username', points: 25, icon: '💎' },
+            'ten_available': { name: 'Lucky Streak', desc: 'Find 10 available usernames', points: 100, icon: '🍀' },
+            'speed_demon': { name: 'Speed Demon', desc: 'Check 50 usernames in under a minute', points: 75, icon: '⚡' },
+            'question_asker': { name: 'Curious Mind', desc: 'Ask your first question', points: 15, icon: '❓' },
+            'helpful_member': { name: 'Helpful Member', desc: 'Answer 5 questions', points: 50, icon: '🤝' },
+            'group_member': { name: 'Team Player', desc: 'Join your first group', points: 20, icon: '👥' },
+            'theme_creator': { name: 'Creative Soul', desc: 'Create a custom theme', points: 30, icon: '🎨' },
+            'data_manager': { name: 'Data Master', desc: 'Export your data for the first time', points: 15, icon: '💾' },
+            'backup_creator': { name: 'Safety First', desc: 'Create your first backup', points: 20, icon: '🔒' },
+            'streak_master': { name: 'Streak Master', desc: 'Achieve a streak of 10 available usernames', points: 75, icon: '🔥' }
+        };
+
+        function checkAchievements() {
+            const newAchievements = [];
+
+            // Check various achievement conditions
+            if (statistics.total >= 1 && !statistics.achievements.has('first_check')) {
+                newAchievements.push('first_check');
+            }
+            if (statistics.total >= 100 && !statistics.achievements.has('hundred_checks')) {
+                newAchievements.push('hundred_checks');
+            }
+            if (statistics.available >= 1 && !statistics.achievements.has('first_available')) {
+                newAchievements.push('first_available');
+            }
+            if (statistics.available >= 10 && !statistics.achievements.has('ten_available')) {
+                newAchievements.push('ten_available');
+            }
+            if (statistics.currentStreak >= 10 && !statistics.achievements.has('streak_master')) {
+                newAchievements.push('streak_master');
+            }
+            if (userGroups.length >= 1 && !statistics.achievements.has('group_member')) {
+                newAchievements.push('group_member');
+            }
+
+            // Award new achievements
+            newAchievements.forEach(achievement => {
+                statistics.achievements.add(achievement);
+                statistics.achievementPoints += achievements[achievement].points;
+                showNotification(`🏆 Achievement Unlocked: ${achievements[achievement].name}!`, 'success');
+                addExperience(achievements[achievement].points);
+            });
+
+            if (newAchievements.length > 0) {
+                updateAchievementsDisplay();
+                autoSaveData(); // Save achievements immediately
+            }
+        }
+
+        function updateAchievementsDisplay() {
+            const achievementsList = document.getElementById('achievementsList');
+            const achievementCount = document.getElementById('achievementCount');
+            const achievementPoints = document.getElementById('achievementPoints');
+
+            achievementCount.textContent = statistics.achievements.size;
+            achievementPoints.textContent = statistics.achievementPoints;
+
+            let achievementsHtml = '';
+            Object.entries(achievements).forEach(([key, achievement]) => {
+                const earned = statistics.achievements.has(key);
+                achievementsHtml += `
+                    <div class="question-item" style="opacity: ${earned ? '1' : '0.5'}">
+                        <div class="question-header">
+                            <span style="font-size: 20px;">${achievement.icon}</span>
+                            <div>
+                                <div class="question-title">${achievement.name}</div>
+                                <div style="font-size: 12px; opacity: 0.8;">${achievement.desc}</div>
+                            </div>
+                            <div class="question-stats">
+                                <span style="color: #64ffda;">${achievement.points} pts</span>
+                                ${earned ? '<span style="color: #90EE90;">✓ Earned</span>' : '<span style="opacity: 0.5;">Locked</span>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (achievementsHtml) {
+                achievementsList.innerHTML = achievementsHtml;
+            } else {
+                achievementsList.innerHTML = '<div style="text-align: center; color: #888; padding: 20px;">No achievements available.</div>';
+            }
+        }
+
+        // Enhanced Navigation System
+        function toggleNavMenu() {
+            const dropdown = document.getElementById('navDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        function toggleUserMenu() {
+            if (currentUser && !currentUser.isGuest) {
+                openProfileModal();
+            } else {
+                document.getElementById('authModal').classList.remove('hide');
+            }
+        }
+
+        function openProfileModal() {
+            if (!currentUser || currentUser.isGuest) return;
+            
+            const modal = document.getElementById('profileModal');
+            const profilePic = getUserProfilePicture(currentUser.username);
+            
+            // Update profile picture
+            const profilePicElement = document.getElementById('profilePictureLarge');
+            if (profilePic) {
+                profilePicElement.style.backgroundImage = `url(${profilePic})`;
+                profilePicElement.style.backgroundSize = 'cover';
+                profilePicElement.textContent = '';
+            } else {
+                profilePicElement.textContent = currentUser.username.charAt(0).toUpperCase();
+                profilePicElement.style.backgroundImage = 'none';
+            }
+            
+            // Update profile info
+            document.getElementById('profileUsername').textContent = currentUser.username;
+            document.getElementById('profileEmail').textContent = currentUser.email;
+            document.getElementById('profileJoinDate').textContent = `Joined: ${new Date(currentUser.joinDate).toLocaleDateString()}`;
+            
+            // Update role badges
+            const roleInfo = getUserRoleInfo(currentUser.username);
+            document.getElementById('profileRoles').innerHTML = `<span class="role-badge ${roleInfo.color}">${roleInfo.name}</span>`;
+            
+            // Update stats
+            document.getElementById('profileLevel').textContent = currentUser.level || 1;
+            document.getElementById('profileExp').textContent = currentUser.experience || 0;
+            document.getElementById('profileChecks').textContent = currentUser.totalChecks || 0;
+            document.getElementById('profileFound').textContent = currentUser.availableFound || 0;
+            document.getElementById('profileQuestions').textContent = currentUser.questionsAsked || 0;
+            document.getElementById('profileAnswers').textContent = currentUser.answersGiven || 0;
+            
+            // Update achievements
+            const userAchievements = Array.from(statistics.achievements).slice(-3);
+            let achievementsHtml = '';
+            
+            if (userAchievements.length > 0) {
+                userAchievements.forEach(achievementKey => {
+                    const achievement = achievements[achievementKey];
+                    if (achievement) {
+                        achievementsHtml += `
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                <span style="font-size: 20px;">${achievement.icon}</span>
+                                <div>
+                                    <div style="font-weight: 600; color: #64ffda;">${achievement.name}</div>
+                                    <div style="font-size: 12px; opacity: 0.8;">${achievement.desc}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+            } else {
+                achievementsHtml = '<div style="text-align: center; color: #888; padding: 20px;">No achievements earned yet.</div>';
+            }
+            
+            document.getElementById('profileAchievements').innerHTML = achievementsHtml;
+            modal.classList.add('show');
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profileModal').classList.remove('show');
+        }
+
+        function switchMainTab(tabName) {
+            // Hide navigation dropdown
+            document.getElementById('navDropdown').classList.remove('show');
+            
+            // Update active tab
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            const tabButton = document.querySelector(`[onclick="switchMainTab('${tabName}')"]`);
+            if (tabButton) {
+                tabButton.classList.add('active');
+            }
+            
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            currentActiveTab = tabName;
+
+            // Load content for specific tabs
+            if (tabName === 'forum') {
+                loadForumQuestions();
+            } else if (tabName === 'achievements') {
+                updateAchievementsDisplay();
+            } else if (tabName === 'groups') {
+                updateGroupsDisplay();
+                updateLeaderboard();
+            }
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.nav-menu')) {
+                document.getElementById('navDropdown').classList.remove('show');
+            }
+        });
+
+        // Enhanced Authentication Functions
+        function switchAuthTab(tab) {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.auth-content').forEach(c => c.classList.remove('active'));
+            
+            document.querySelector(`[onclick="switchAuthTab('${tab}')"]`).classList.add('active');
+            document.getElementById(`${tab}-auth`).classList.add('active');
+        }
+
+        function handleSignIn(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('signinUsername').value.trim();
+            const password = document.getElementById('signinPassword').value;
+            const remember = document.getElementById('rememberMe').checked;
+
+            if (!username || !password) {
+                showNotification('Please fill in all fields.', 'error');
+                return;
+            }
+
+            // Check if user exists and password is correct
+            const userKey = username.toLowerCase();
+            if (users[userKey] && users[userKey].password === password) {
+                currentUser = users[userKey];
+                isAuthenticated = true;
+                document.getElementById('authModal').classList.add('hide');
+                
+                if (remember) {
+                    localStorage.setItem(STORAGE_KEYS.rememberUser, userKey);
+                }
+                
+                initializeAuthenticatedUser();
+                showNotification('Welcome back, ' + currentUser.username + '!', 'success');
+                autoSaveData();
+            } else {
+                showNotification('Invalid username/email or password.', 'error');
+            }
+        }
+
+        function handleSignUp(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('signupUsername').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('signupConfirmPassword').value;
+
+            if (!username || !email || !password || !confirmPassword) {
+                showNotification('Please fill in all fields.', 'error');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showNotification('Passwords do not match.', 'error');
+                return;
+            }
+
+            if (password.length < 6) {
+                showNotification('Password must be at least 6 characters long.', 'error');
+                return;
+            }
+
+            const userKey = username.toLowerCase();
+            if (users[userKey]) {
+                showNotification('Username already exists. Please choose a different one.', 'error');
+                return;
+            }
+
+            // Create new user
+            const newUser = {
+                username: username,
+                email: email,
+                password: password,
+                joinDate: new Date(),
+                level: 1,
+                experience: 0,
+                totalChecks: 0,
+                availableFound: 0,
+                groups: [],
+                achievements: [],
+                questionsAsked: 0,
+                answersGiven: 0
+            };
+
+            // Save profile picture if uploaded
+            if (window.tempProfilePicture) {
+                profilePictures[userKey] = window.tempProfilePicture;
+                delete window.tempProfilePicture;
+            }
+
+            users[userKey] = newUser;
+            currentUser = newUser;
+            isAuthenticated = true;
+            document.getElementById('authModal').classList.add('hide');
+            initializeAuthenticatedUser();
+            saveAllData();
+            showNotification('Account created successfully! Welcome to Findify!', 'success');
+        }
+
+        function continueAsGuest() {
+            currentUser = {
+                username: 'Guest User',
+                email: 'guest@findify.com',
+                level: 1,
+                experience: 0,
+                totalChecks: 0,
+                availableFound: 0,
+                groups: [],
+                achievements: [],
+                isGuest: true
+            };
+            
+            document.getElementById('authModal').classList.add('hide');
+            initializeAuthenticatedUser();
+            showNotification('Welcome, Guest! Sign up to save your progress.', 'info');
+        }
+
+        function initializeAuthenticatedUser() {
+            // Update navigation
+            document.getElementById('navUserName').textContent = currentUser.username;
+            
+            const navAvatar = document.getElementById('navUserAvatar');
+            const profilePic = getUserProfilePicture(currentUser.username);
+            
+            if (profilePic) {
+                navAvatar.style.backgroundImage = `url(${profilePic})`;
+                navAvatar.style.backgroundSize = 'cover';
+                navAvatar.textContent = '';
+            } else {
+                navAvatar.textContent = currentUser.username.charAt(0).toUpperCase();
+                navAvatar.style.backgroundImage = 'none';
+            }
+            
+            if (!currentUser.isGuest) {
+                document.getElementById('groupsTabBtn').style.display = 'block';
+                document.getElementById('navGroups').style.display = 'block';
+                document.getElementById('signOutNav').style.display = 'block';
+                loadUserGroups();
+            }
+            
+            updateProfileDisplay();
+            updateAchievementsDisplay();
+        }
+
+        function signOut() {
+            if (confirm('Are you sure you want to sign out?')) {
+                // Save data before signing out
+                saveAllData();
+                
+                isAuthenticated = false;
+                currentUser = null;
+                userGroups = [];
+                localStorage.removeItem(STORAGE_KEYS.rememberUser);
+                document.getElementById('authModal').classList.remove('hide');
+                document.getElementById('groupsTabBtn').style.display = 'none';
+                document.getElementById('navGroups').style.display = 'none';
+                document.getElementById('signOutNav').style.display = 'none';
+                
+                // Reset nav avatar
+                const navAvatar = document.getElementById('navUserAvatar');
+                navAvatar.style.backgroundImage = 'none';
+                navAvatar.textContent = 'G';
+                document.getElementById('navUserName').textContent = 'Guest';
+                
+                resetStatistics();
+                showNotification('You have been signed out.', 'info');
+            }
+        }
+
+        // Sample Data Initialization
+        function initializeSampleData() {
+            questions = [
+                {
+                    id: 1,
+                    title: "What makes a good Roblox username?",
+                    content: "I'm looking for tips on creating memorable and unique Roblox usernames. What should I avoid?",
+                    author: "UsernameSeeker",
+                    category: "username-tips",
+                    date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+                    likes: 15,
+                    views: 89,
+                    comments: [
+                        {
+                            id: 1,
+                            author: "ExpertNamer",
+                            content: "Avoid using too many numbers or random characters. Try to make it memorable and easy to spell!",
+                            date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
+                        },
+                        {
+                            id: 2,
+                            author: "ProHunter",
+                            content: "Keep it between 6-12 characters for the best results. Shorter is usually better!",
+                            date: new Date(Date.now() - 12 * 60 * 60 * 1000)
+                        }
+                    ]
+                },
+                {
+                    id: 2,
+                    title: "How often should I check for usernames?",
+                    content: "Is there an optimal time or frequency for checking username availability?",
+                    author: "TimingMaster",
+                    category: "availability",
+                    date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+                    likes: 8,
+                    views: 42,
+                    comments: [
+                        {
+                            id: 3,
+                            author: "FindifyAdmin",
+                            content: "I recommend checking every 2-3 seconds to avoid rate limiting. Our system is optimized for this interval.",
+                            date: new Date(Date.now() - 8 * 60 * 60 * 1000)
+                        }
+                    ]
+                },
+                {
+                    id: 3,
+                    title: "Best generation mode for rare finds?",
+                    content: "Which generation mode do you think gives the best chance of finding rare, available usernames?",
+                    author: "RareFinder",
+                    category: "general",
+                    date: new Date(Date.now() - 6 * 60 * 60 * 1000),
+                    likes: 12,
+                    views: 67,
+                    comments: [
+                        {
+                            id: 4,
+                            author: "FindifyOwner",
+                            content: "Based on our data, the 'Coherent' mode with shorter lengths (4-6 characters) tends to find the most unique available usernames. The custom theme feature is also very effective!",
+                            date: new Date(Date.now() - 2 * 60 * 60 * 1000)
+                        }
+                    ]
+                }
+            ];
+
+            // Save initial comments
+            questions.forEach(question => {
+                savedComments[question.id] = question.comments;
+            });
+        }
+
+        function initializeSampleGroups() {
+            groups = {
+                'hunters': {
+                    id: 'hunters',
+                    name: 'Username Hunters',
+                    description: 'The premier group for username discovery enthusiasts',
+                    members: ['ProHunter', 'NameSeeker', 'UsernameKing', 'ExpertNamer'],
+                    isPrivate: false,
+                    stats: { totalChecks: 125000, availableFound: 8900 },
+                    inviteCode: 'HUNT123'
+                },
+                'speed': {
+                    id: 'speed',
+                    name: 'Speed Checkers',
+                    description: 'For those who love fast-paced username checking',
+                    members: ['DigitalNinja', 'CodeMaster', 'FastFinder', 'BetaTester1'],
+                    isPrivate: false,
+                    stats: { totalChecks: 89000, availableFound: 6200 },
+                    inviteCode: 'SPEED99'
+                },
+                'newbie': {
+                    id: 'newbie',
+                    name: 'Newbie Friendly',
+                    description: 'Welcome beginners! Get help and tips from experienced users',
+                    members: ['ExpertUserHelper', 'Mentor2', 'Guide3', 'TimingMaster', 'UsernameSeeker'],
+                    isPrivate: false,
+                    stats: { totalChecks: 45000, availableFound: 3100 },
+                    inviteCode: 'NEW123'
+                }
+            };
+        }
+
+        // Enhanced Username Generation System
+        const themedWords = {
+            jesus: {
+                prefixes: ['Jesus', 'Christ', 'Lord', 'Savior', 'Divine', 'Holy', 'Sacred', 'Blessed', 'Grace', 'Faith'],
+                suffixes: ['LoveU', 'Saves', 'Lives', 'Bless', 'Grace', 'Light', 'Hope', 'Peace', 'Faith', 'Love', 'Joy', 'Life'],
+                connectors: ['', '4', 'Is', 'My', 'Our', 'The']
+            },
+            emo: {
+                prefixes: ['Dark', 'Shadow', 'Broken', 'Lost', 'Silent', 'Fallen', 'Empty', 'Black', 'Cold', 'Void'],
+                suffixes: ['Heart', 'Soul', 'Angel', 'Tears', 'Pain', 'Night', 'Dreams', 'Scars', 'Ghost', 'Rose'],
+                connectors: ['', 'X', 'Of', 'In', 'My', 'The', '4']
+            },
+            love: {
+                prefixes: ['Love', 'Heart', 'Sweet', 'Dear', 'Cute', 'Angel', 'Baby', 'Honey', 'Kiss', 'Hug'],
+                suffixes: ['4U', 'Me', 'You', 'Forever', 'Always', 'Mine', 'Heart', 'Kiss', 'Hug', 'Love', 'Baby'],
+                connectors: ['', 'My', 'Is', '4', 'U', 'Me', 'The']
+            },
+            life: {
+                prefixes: ['Life', 'Live', 'Dream', 'Hope', 'Joy', 'Happy', 'Smile', 'Shine', 'Bright', 'Star'],
+                suffixes: ['Life', 'Dreams', 'Hope', 'Joy', 'Light', 'Shine', 'Star', 'Bright', 'Happy', 'Love'],
+                connectors: ['', 'My', 'Is', '4', 'The', 'Of', 'In']
+            },
+            romance: {
+                prefixes: ['Romeo', 'Princess', 'Prince', 'Beauty', 'Rose', 'Charm', 'Lovely', 'Sweet', 'Tender', 'Gentle'],
+                suffixes: ['Heart', 'Kiss', 'Love', 'Romance', 'Beauty', 'Princess', 'Prince', 'Rose', 'Dream', 'Angel'],
+                connectors: ['', 'My', 'Is', '4', 'The', 'Of', 'In']
+            },
+            gamer: {
+                prefixes: ['Pro', 'Elite', 'Master', 'Legend', 'Epic', 'Mega', 'Ultra', 'Super', 'Hyper', 'Cyber'],
+                suffixes: ['Gamer', 'Player', 'Pro', 'Master', 'King', 'Lord', 'Beast', 'Ninja', 'Warrior', 'Hero'],
+                connectors: ['', 'X', 'The', 'Pro', 'Elite', '99', '2024']
+            },
+            cool: {
+                prefixes: ['Cool', 'Ice', 'Chill', 'Fresh', 'Smooth', 'Slick', 'Sharp', 'Swift', 'Sleek', 'Style'],
+                suffixes: ['Dude', 'Guy', 'Kid', 'Boy', 'Girl', 'Star', 'Ace', 'Pro', 'King', 'Queen'],
+                connectors: ['', 'X', 'The', 'Is', 'My', '2024', '99']
+            }
+        };
+
+        const coherentStyles = {
+            star: ['Star', 'Nova', 'Cosmic', 'Galaxy', 'Astro', 'Stellar', 'Nebula', 'Orbit', 'Solar', 'Luna'],
+            nova: ['Nova', 'Burst', 'Flare', 'Blast', 'Spark', 'Flash', 'Glow', 'Shine', 'Bright', 'Radiant'],
+            light: ['Light', 'Glow', 'Shine', 'Beam', 'Ray', 'Bright', 'Lumina', 'Radiant', 'Aurora', 'Prism'],
+            dream: ['Dream', 'Vision', 'Fantasy', 'Wonder', 'Magic', 'Mystic', 'Enchant', 'Spell', 'Wish', 'Hope'],
+            blue: ['Blue', 'Azure', 'Cyan', 'Cobalt', 'Navy', 'Sky', 'Ocean', 'Aqua', 'Teal', 'Sapphire'],
+            fire: ['Fire', 'Flame', 'Blaze', 'Burn', 'Heat', 'Ember', 'Spark', 'Inferno', 'Phoenix', 'Solar'],
+            cloud: ['Cloud', 'Sky', 'Mist', 'Fog', 'Storm', 'Rain', 'Wind', 'Air', 'Breeze', 'Drift'],
+            moon: ['Moon', 'Luna', 'Lunar', 'Night', 'Twilight', 'Dusk', 'Eclipse', 'Crescent', 'Silver', 'Pale'],
+            sun: ['Sun', 'Solar', 'Dawn', 'Day', 'Bright', 'Gold', 'Yellow', 'Warm', 'Light', 'Sunny'],
+            void: ['Void', 'Dark', 'Shadow', 'Black', 'Abyss', 'Deep', 'Empty', 'Null', 'Zero', 'Silent'],
+            crystal: ['Crystal', 'Gem', 'Diamond', 'Prism', 'Glass', 'Clear', 'Pure', 'Shine', 'Sparkle', 'Jewel'],
+            pixel: ['Pixel', 'Digital', 'Cyber', 'Tech', 'Code', 'Data', 'Binary', 'Neon', 'Grid', 'Matrix']
+        };
+
+        function generateUsername() {
+            const mode = document.getElementById('mode').value;
+            const length = parseInt(document.getElementById('length').value);
+            const includeNumbers = document.getElementById('includeNumbers').checked;
+            
+            let username = '';
+            
+            switch (mode) {
+                case 'random':
+                    username = generateRandomUsername(length, includeNumbers);
+                    break;
+                case 'coherent':
+                    const style = document.getElementById('style').value;
+                    username = generateCoherentUsername(style, length, includeNumbers);
+                    break;
+                case 'custom':
+                    const customWord = document.getElementById('customWord').value.trim();
+                    if (customWord && customThemes[customWord]) {
+                        username = generateThemedUsername(customThemes[customWord], length, includeNumbers);
+                    } else {
+                        username = generateRandomUsername(length, includeNumbers);
+                    }
+                    break;
+                default:
+                    if (themedWords[mode]) {
+                        username = generateThemedUsername(themedWords[mode], length, includeNumbers);
+                    } else {
+                        username = generateRandomUsername(length, includeNumbers);
+                    }
+                    break;
+            }
+            
+            // Ensure username is within Roblox limits (3-20 characters)
+            if (username.length < 3) {
+                username = username + Math.random().toString(36).substring(2, 5 - username.length);
+            } else if (username.length > 20) {
+                username = username.substring(0, 20);
+            }
+            
+            return username;
+        }
+
+        function generateRandomUsername(length, includeNumbers) {
+            const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const numbers = '0123456789';
+            let result = '';
+            
+            for (let i = 0; i < length; i++) {
+                if (includeNumbers && Math.random() < 0.2) {
+                    result += numbers.charAt(Math.floor(Math.random() * numbers.length));
+                } else {
+                    result += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+            }
+            
+            return result;
+        }
+
+        function generateCoherentUsername(style, length, includeNumbers) {
+            if (!coherentStyles[style]) return generateRandomUsername(length, includeNumbers);
+            
+            const words = coherentStyles[style];
+            const baseWord = words[Math.floor(Math.random() * words.length)];
+            let username = baseWord;
+            
+            if (username.length < length) {
+                const remaining = length - username.length;
+                if (includeNumbers && remaining > 0) {
+                    username += Math.floor(Math.random() * Math.pow(10, Math.min(remaining, 4)));
+                }
+                
+                if (username.length < length) {
+                    const extraChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                    while (username.length < length) {
+                        username += extraChars.charAt(Math.floor(Math.random() * extraChars.length));
+                    }
+                }
+            }
+            
+            return username.substring(0, length);
+        }
+
+        function generateThemedUsername(theme, length, includeNumbers) {
+            const prefix = theme.prefixes[Math.floor(Math.random() * theme.prefixes.length)];
+            const suffix = theme.suffixes[Math.floor(Math.random() * theme.suffixes.length)];
+            const connector = theme.connectors[Math.floor(Math.random() * theme.connectors.length)];
+            
+            let username = prefix + connector + suffix;
+            
+            if (includeNumbers && Math.random() < 0.5) {
+                username += Math.floor(Math.random() * 1000);
+            }
+            
+            if (username.length > length) {
+                // Try different combinations
+                username = prefix + suffix;
+                if (username.length > length) {
+                    username = prefix;
+                    if (includeNumbers) {
+                        username += Math.floor(Math.random() * 1000);
+                    }
+                }
+            }
+            
+            return username.substring(0, length);
+        }
+
+        function generatePreview() {
+            const previewArea = document.getElementById('previewArea');
+            let previews = '<div class="preview-grid">';
+            
+            for (let i = 0; i < 20; i++) {
+                const username = generateUsername();
+                previews += `<div class="preview-item">${username}</div>`;
+            }
+            
+            previews += '</div>';
+            previewArea.innerHTML = previews;
+        }
+
+        // Enhanced checking system with save functionality
+        async function checkUsername(username) {
+            try {
+                // Simulate API call to Roblox
+                await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 200));
+                
+                // Simulate response (random for demo)
+                const isAvailable = Math.random() < 0.15; // 15% chance of being available
+                
+                return {
+                    username: username,
+                    available: isAvailable
+                };
+            } catch (error) {
+                return {
+                    username: username,
+                    available: false,
+                    error: true
+                };
+            }
+        }
+
+        async function startChecking() {
+            if (isChecking) return;
+            
+            isChecking = true;
+            startTime = new Date();
+            statistics.sessionStart = startTime;
+            statistics.allTimeStats.sessionsPlayed++;
+            
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            document.getElementById('progressContainer').style.display = 'block';
+            
+            const resultsArea = document.getElementById('resultsArea');
+            const quickStats = document.getElementById('quickStats');
+            const speed = parseInt(document.getElementById('speed').value);
+            
+            resultsArea.innerHTML = '';
+            
+            const checkLoop = async () => {
+                if (!isChecking) return;
+                
+                const username = generateUsername();
+                
+                if (usedNames.has(username)) {
+                    setTimeout(checkLoop, speed);
+                    return;
+                }
+                
+                usedNames.add(username);
+                const result = await checkUsername(username);
+                
+                if (!isChecking) return;
+                
+                // Update statistics
+                statistics.total++;
+                statistics.allTimeStats.totalChecks++;
+                
+                if (result.available) {
+                    statistics.available++;
+                    statistics.allTimeStats.availableFound++;
+                    statistics.currentStreak++;
+                    statistics.bestStreak = Math.max(statistics.bestStreak, statistics.currentStreak);
+                    statistics.bestUsernames.push(username);
+                    
+                    // Keep only top 50 usernames
+                    if (statistics.bestUsernames.length > 50) {
+                        statistics.bestUsernames = statistics.bestUsernames.slice(-50);
+                    }
+                } else {
+                    statistics.taken++;
+                    statistics.currentStreak = 0;
+                }
+                
+                // Save result if enabled
+                saveResult(result);
+                
+                // Update displays
+                updateStatisticsDisplay();
+                updateQuickStats();
+                addResultToDisplay(result);
+                checkAchievements();
+                
+                // Update user progress if authenticated
+                if (currentUser && !currentUser.isGuest) {
+                    currentUser.totalChecks++;
+                    if (result.available) {
+                        currentUser.availableFound++;
+                        addExperience(10);
+                    }
+                    addExperience(1);
+                }
+                
+                setTimeout(checkLoop, speed);
+            };
+            
+            checkLoop();
+        }
+
+        function stopChecking() {
+            isChecking = false;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('progressContainer').style.display = 'none';
+            
+            // Update session time in all-time stats
+            if (statistics.sessionStart) {
+                const sessionTime = new Date() - statistics.sessionStart;
+                statistics.allTimeStats.timeSpent += sessionTime;
+            }
+            
+            // Auto-save when stopping
+            autoSaveData();
+            
+            showNotification('Checking stopped. Progress saved!', 'info');
+        }
+
+        function addResultToDisplay(result) {
+            const resultsArea = document.getElementById('resultsArea');
+            const resultDiv = document.createElement('div');
+            
+            resultDiv.className = `result-item ${result.available ? 'result-available' : 'result-taken'}`;
+            resultDiv.innerHTML = `
+                <span>${result.username}</span>
+                <div class="result-actions">
+                    ${result.available ? '<button class="result-action" onclick="copyUsername(\'' + result.username + '\')">Copy</button>' : ''}
+                    <button class="result-action" onclick="removeResult(this)">×</button>
+                </div>
+            `;
+            
+            resultsArea.insertBefore(resultDiv, resultsArea.firstChild);
+            
+            // Limit results display
+            const maxResults = parseInt(document.getElementById('maxResults')?.value || 100);
+            while (resultsArea.children.length > maxResults) {
+                resultsArea.removeChild(resultsArea.lastChild);
+            }
+        }
+
+        function copyUsername(username) {
+            navigator.clipboard.writeText(username).then(() => {
+                showNotification('Username copied to clipboard!', 'success');
+            });
+        }
+
+        function removeResult(button) {
+            button.closest('.result-item').remove();
+        }
+
+        function updateStatisticsDisplay() {
+            document.getElementById('totalChecks').textContent = statistics.total.toLocaleString();
+            document.getElementById('availableCount').textContent = statistics.available.toLocaleString();
+            document.getElementById('takenCount').textContent = statistics.taken.toLocaleString();
+            document.getElementById('bestStreak').textContent = statistics.bestStreak.toLocaleString();
+            
+            const successRate = statistics.total > 0 ? (statistics.available / statistics.total * 100) : 0;
+            document.getElementById('successRate').textContent = successRate.toFixed(1) + '%';
+            
+            if (statistics.sessionStart) {
+                const sessionTime = new Date() - statistics.sessionStart;
+                const hours = Math.floor(sessionTime / 3600000);
+                const minutes = Math.floor((sessionTime % 3600000) / 60000);
+                const seconds = Math.floor((sessionTime % 60000) / 1000);
+                document.getElementById('sessionTime').textContent = 
+                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                const checksPerSecond = sessionTime > 0 ? (statistics.total / (sessionTime / 1000)) : 0;
+                document.getElementById('checksPerSecond').textContent = checksPerSecond.toFixed(1) + '/s';
+            }
+            
+            // Update level
+            const level = Math.floor(statistics.total / 50) + 1;
+            document.getElementById('currentLevel').textContent = level;
+            
+            // Update best usernames display
+            const bestUsernamesDiv = document.getElementById('bestUsernames');
+            if (statistics.bestUsernames.length > 0) {
+                bestUsernamesDiv.innerHTML = statistics.bestUsernames.slice(-10).reverse().map(username => 
+                    `<div class="preview-item" onclick="copyUsername('${username}')">${username}</div>`
+                ).join('');
+            } else {
+                bestUsernamesDiv.innerHTML = 'No available usernames found yet.';
+            }
+        }
+
+        function updateQuickStats() {
+            const quickStats = document.getElementById('quickStats');
+            const rate = statistics.total > 0 ? (statistics.available / statistics.total * 100) : 0;
+            quickStats.innerHTML = `
+                Checked: ${statistics.total} | Available: ${statistics.available} | 
+                Success Rate: ${rate.toFixed(1)}% | Current Streak: ${statistics.currentStreak}
+            `;
+        }
+
+        // Enhanced Q&A Forum System with Save Functionality
+        function loadForumQuestions() {
+            const forumContainer = document.getElementById('forumContainer');
+            
+            if (!currentUser.isGuest) {
+                document.getElementById('questionForm').style.display = 'block';
+            } else {
+                document.getElementById('questionForm').style.display = 'none';
+            }
+
+            let questionsHtml = '';
+            
+            // Sort questions by date (newest first)
+            const sortedQuestions = [...questions].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            sortedQuestions.forEach(question => {
+                const timeAgo = getTimeAgo(question.date);
+                const categoryColor = getCategoryColor(question.category);
+                const canDelete = currentUser && canUserDeletePost(currentUser.username);
+                
+                questionsHtml += `
+                    <div class="question-item">
+                        ${canDelete ? `
+                            <div class="admin-actions">
+                                <button class="admin-btn" onclick="deleteQuestion(${question.id})" title="Delete Question">🗑️</button>
+                            </div>
+                        ` : ''}
+                        <div class="question-header">
+                            <div class="question-author">
+                                ${renderUserWithRole(question.author, true)}
+                            </div>
+                            <div class="question-date">${timeAgo}</div>
+                        </div>
+                        <div class="question-title" onclick="toggleComments(${question.id})">
+                            ${question.title}
+                        </div>
+                        <div class="question-content">
+                            ${question.content}
+                        </div>
+                        <div class="question-stats">
+                            <span style="color: ${categoryColor};">#${question.category}</span>
+                            <span>👍 ${question.likes}</span>
+                            <span>👁️ ${question.views}</span>
+                            <span>💬 ${question.comments.length}</span>
+                        </div>
+                        <div class="question-actions">
+                            <button class="btn btn-secondary btn-small" onclick="likeQuestion(${question.id})">
+                                Like
+                            </button>
+                            <button class="btn btn-secondary btn-small" onclick="toggleComments(${question.id})">
+                                Comments
+                            </button>
+                        </div>
+                        <div class="comments-section" id="comments-${question.id}">
+                            ${renderComments(question.comments, question.id)}
+                            ${!currentUser.isGuest ? `
+                                <div class="comment-form">
+                                    <input type="text" class="comment-input" placeholder="Write a comment..." 
+                                           id="comment-input-${question.id}" maxlength="200">
+                                    <button class="btn btn-primary btn-small" onclick="addComment(${question.id})">
+                                        Reply
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (questionsHtml) {
+                forumContainer.innerHTML = questionsHtml;
+            } else {
+                forumContainer.innerHTML = '<div style="text-align: center; color: #888; padding: 40px;">No questions yet. Be the first to ask!</div>';
+            }
+        }
+
+        function renderComments(comments, questionId) {
+            if (!comments || comments.length === 0) {
+                return '<div style="text-align: center; color: #888; padding: 10px;">No comments yet.</div>';
+            }
+
+            const canDelete = currentUser && canUserDeletePost(currentUser.username);
+
+            return comments.map(comment => {
+                const timeAgo = getTimeAgo(comment.date);
+                return `
+                    <div class="comment-item">
+                        ${canDelete ? `
+                            <button class="admin-btn" onclick="deleteComment(${questionId}, ${comment.id})" 
+                                    style="position: absolute; top: 5px; right: 5px;" title="Delete Comment">🗑️</button>
+                        ` : ''}
+                        <div class="comment-header">
+                            <div class="comment-author">
+                                ${renderUserWithRole(comment.author, false)}
+                            </div>
+                            <div class="comment-date">${timeAgo}</div>
+                        </div>
+                        <div>${comment.content}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function submitQuestion(event) {
+            event.preventDefault();
+            
+            if (currentUser.isGuest) {
+                showNotification('Please sign up to ask questions.', 'error');
+                return;
+            }
+
+            const title = document.getElementById('questionTitle').value.trim();
+            const content = document.getElementById('questionContent').value.trim();
+            const category = document.getElementById('questionCategory').value;
+
+            if (!title) {
+                showNotification('Please enter a question title.', 'error');
+                return;
+            }
+
+            const newQuestion = {
+                id: Date.now(),
+                title: title,
+                content: content || '',
+                author: currentUser.username,
+                category: category,
+                date: new Date(),
+                likes: 0,
+                views: 0,
+                comments: []
+            };
+
+            questions.unshift(newQuestion);
+            savedComments[newQuestion.id] = [];
+            currentUser.questionsAsked++;
+            
+            // Check for achievements
+            if (!statistics.achievements.has('question_asker')) {
+                statistics.achievements.add('question_asker');
+                statistics.achievementPoints += achievements.question_asker.points;
+                showNotification(`🏆 Achievement Unlocked: ${achievements.question_asker.name}!`, 'success');
+                addExperience(achievements.question_asker.points);
+            }
+            
+            saveAllData();
+            loadForumQuestions();
+            
+            // Clear form
+            document.getElementById('questionTitle').value = '';
+            document.getElementById('questionContent').value = '';
+            document.getElementById('questionCategory').value = 'general';
+            
+            showNotification('Question posted successfully!', 'success');
+            addExperience(5);
+        }
+
+        function deleteQuestion(questionId) {
+            if (!canUserDeletePost(currentUser.username)) {
+                showNotification('You do not have permission to delete questions.', 'error');
+                return;
+            }
+
+            if (confirm('Are you sure you want to delete this question? This action cannot be undone.')) {
+                questions = questions.filter(q => q.id !== questionId);
+                delete savedComments[questionId];
+                saveAllData();
+                loadForumQuestions();
+                showNotification('Question deleted successfully.', 'success');
+            }
+        }
+
+        function deleteComment(questionId, commentId) {
+            if (!canUserDeletePost(currentUser.username)) {
+                showNotification('You do not have permission to delete comments.', 'error');
+                return;
+            }
+
+            if (confirm('Are you sure you want to delete this comment?')) {
+                const question = questions.find(q => q.id === questionId);
+                if (question) {
+                    question.comments = question.comments.filter(c => c.id !== commentId);
+                    savedComments[questionId] = question.comments;
+                    saveAllData();
+                    loadForumQuestions();
+                    showNotification('Comment deleted successfully.', 'success');
+                }
+            }
+        }
+
+        function toggleComments(questionId) {
+            const commentsSection = document.getElementById(`comments-${questionId}`);
+            commentsSection.classList.toggle('show');
+            
+            // Increment view count
+            const question = questions.find(q => q.id === questionId);
+            if (question) {
+                question.views++;
+                autoSaveData();
+            }
+        }
+
+        function likeQuestion(questionId) {
+            if (currentUser.isGuest) {
+                showNotification('Please sign up to like questions.', 'error');
+                return;
+            }
+
+            const question = questions.find(q => q.id === questionId);
+            if (question) {
+                question.likes++;
+                autoSaveData();
+                loadForumQuestions();
+                showNotification('Question liked!', 'success');
+            }
+        }
+
+        function addComment(questionId) {
+            if (currentUser.isGuest) {
+                showNotification('Please sign up to comment.', 'error');
+                return;
+            }
+
+            const input = document.getElementById(`comment-input-${questionId}`);
+            const content = input.value.trim();
+            
+            if (!content) {
+                showNotification('Please enter a comment.', 'error');
+                return;
+            }
+
+            const question = questions.find(q => q.id === questionId);
+            if (question) {
+                const newComment = {
+                    id: Date.now(),
+                    author: currentUser.username,
+                    content: content,
+                    date: new Date()
+                };
+
+                question.comments.push(newComment);
+                savedComments[questionId] = question.comments;
+                currentUser.answersGiven++;
+                
+                // Check for achievements
+                if (currentUser.answersGiven >= 5 && !statistics.achievements.has('helpful_member')) {
+                    statistics.achievements.add('helpful_member');
+                    statistics.achievementPoints += achievements.helpful_member.points;
+                    showNotification(`🏆 Achievement Unlocked: ${achievements.helpful_member.name}!`, 'success');
+                    addExperience(achievements.helpful_member.points);
+                }
+                
+                saveAllData();
+                loadForumQuestions();
+                showNotification('Comment added!', 'success');
+                addExperience(3);
+            }
+        }
+
+        function getCategoryColor(category) {
+            const colors = {
+                'general': '#a29bfe',
+                'username-tips': '#64ffda',
+                'availability': '#00b894',
+                'roblox-rules': '#ff7675',
+                'technical': '#fd79a8',
+                'suggestions': '#fdcb6e'
+            };
+            return colors[category] || '#a29bfe';
+        }
+
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffMs = now - new Date(date);
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            return `${diffDays}d ago`;
+        }
+
+        // Enhanced Group System with Save Functionality
+        function openGroupModal(action) {
+            if (currentUser.isGuest) {
+                showNotification('Please sign up to access groups.', 'error');
+                return;
+            }
+            
+            document.getElementById('groupModal').classList.add('show');
+            
+            if (action === 'create') {
+                document.getElementById('createGroupContent').style.display = 'block';
+                document.getElementById('joinGroupContent').style.display = 'none';
+            } else {
+                document.getElementById('createGroupContent').style.display = 'none';
+                document.getElementById('joinGroupContent').style.display = 'block';
+                loadPublicGroups();
+            }
+        }
+
+        function closeGroupModal() {
+            document.getElementById('groupModal').classList.remove('show');
+        }
+
+        function loadPublicGroups() {
+            const publicGroupsDiv = document.getElementById('publicGroups');
+            let groupsHtml = '';
+
+            Object.values(groups).forEach(group => {
+                if (!group.isPrivate && !group.members.includes(currentUser.username)) {
+                    groupsHtml += `
+                        <div class="question-item" style="margin-bottom: 15px;">
+                            <div class="question-header">
+                                <div class="question-title">${group.name}</div>
+                                <div class="question-stats">${group.members.length} members</div>
+                            </div>
+                            <div style="font-size: 12px; opacity: 0.8; margin-bottom: 10px;">
+                                ${group.description || 'No description'}
+                            </div>
+                            <div class="stats-grid" style="grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0;">
+                                <div class="stat-card" style="padding: 8px;">
+                                    <div class="stat-value" style="font-size: 1.2em;">${group.stats.totalChecks.toLocaleString()}</div>
+                                    <div class="stat-label">Total Checks</div>
+                                </div>
+                                <div class="stat-card" style="padding: 8px;">
+                                    <div class="stat-value" style="font-size: 1.2em;">${group.stats.availableFound.toLocaleString()}</div>
+                                    <div class="stat-label">Available Found</div>
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary btn-small" onclick="joinPublicGroup('${group.id}')">
+                                Join Group
+                            </button>
+                        </div>
+                    `;
+                }
+            });
+
+            if (groupsHtml) {
+                publicGroupsDiv.innerHTML = groupsHtml;
+            } else {
+                publicGroupsDiv.innerHTML = '<div style="text-align: center; color: #888; padding: 20px;">No public groups available to join.</div>';
+            }
+        }
+
+        function createGroup(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('groupName').value.trim();
+            const description = document.getElementById('groupDescription').value.trim();
+            const isPrivate = document.getElementById('groupPrivate').checked;
+
+            if (!name) {
+                showNotification('Please enter a group name.', 'error');
+                return;
+            }
+
+            const groupId = 'group_' + Date.now();
+            const newGroup = {
+                id: groupId,
+                name: name,
+                description: description,
+                members: [currentUser.username],
+                isPrivate: isPrivate,
+                owner: currentUser.username,
+                stats: { totalChecks: 0, availableFound: 0 },
+                inviteCode: generateInviteCode(),
+                createdDate: new Date()
+            };
+
+            groups[groupId] = newGroup;
+            userGroups.push(newGroup);
+            currentUser.groups.push(groupId);
+            
+            saveAllData();
+            closeGroupModal();
+            updateGroupsDisplay();
+            showNotification(`Group "${name}" created successfully!`, 'success');
+            addExperience(20);
+            
+            if (isPrivate) {
+                showNotification(`Invite code: ${newGroup.inviteCode}`, 'info');
+            }
+        }
+
+        function joinGroup(event) {
+            event.preventDefault();
+            
+            const code = document.getElementById('groupCode').value.trim();
+            
+            if (!code) {
+                showNotification('Please enter a group ID or invite code.', 'error');
+                return;
+            }
+
+            let targetGroup = null;
+            for (const groupId in groups) {
+                const group = groups[groupId];
+                if (group.id === code || group.inviteCode === code) {
+                    targetGroup = group;
+                    break;
+                }
+            }
+
+            if (!targetGroup) {
+                showNotification('Group not found. Please check the code and try again.', 'error');
+                return;
+            }
+
+            if (targetGroup.members.includes(currentUser.username)) {
+                showNotification('You are already a member of this group.', 'error');
+                return;
+            }
+
+            targetGroup.members.push(currentUser.username);
+            userGroups.push(targetGroup);
+            currentUser.groups.push(targetGroup.id);
+            
+            saveAllData();
+            closeGroupModal();
+            updateGroupsDisplay();
+            showNotification(`Successfully joined "${targetGroup.name}"!`, 'success');
+            checkAchievements();
+            addExperience(10);
+        }
+
+        function joinPublicGroup(groupId) {
+            const group = groups[groupId];
+            if (!group) return;
+
+            if (group.members.includes(currentUser.username)) {
+                showNotification('You are already a member of this group.', 'error');
+                return;
+            }
+
+            group.members.push(currentUser.username);
+            userGroups.push(group);
+            currentUser.groups.push(groupId);
+            
+            saveAllData();
+            closeGroupModal();
+            updateGroupsDisplay();
+            showNotification(`Successfully joined "${group.name}"!`, 'success');
+            checkAchievements();
+            addExperience(10);
+        }
+
+        function loadUserGroups() {
+            userGroups = [];
+            if (currentUser.groups) {
+                currentUser.groups.forEach(groupId => {
+                    if (groups[groupId]) {
+                        userGroups.push(groups[groupId]);
+                    }
+                });
+            }
+            updateGroupsDisplay();
+        }
+
+        function updateGroupsDisplay() {
+            const myGroupsDiv = document.getElementById('myGroups');
+            
+            if (userGroups.length === 0) {
+                myGroupsDiv.innerHTML = `
+                    <div style="text-align: center; color: #888; padding: 20px;">
+                        You haven't joined any groups yet.
+                    </div>
+                `;
+                return;
+            }
+
+            let groupsHtml = '';
+            userGroups.forEach(group => {
+                const isOwner = group.owner === currentUser.username;
+                groupsHtml += `
+                    <div class="question-item">
+                        <div class="question-header">
+                            <div class="question-title">
+                                ${group.name}
+                                ${isOwner ? '<span class="achievement-badge">Owner</span>' : ''}
+                            </div>
+                            <div class="question-stats">${group.members.length} members</div>
+                        </div>
+                        <div style="font-size: 12px; opacity: 0.8; margin-bottom: 15px;">
+                            ${group.description || 'No description'}
+                        </div>
+                        <div class="stats-grid" style="grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div class="stat-card" style="padding: 10px;">
+                                <div class="stat-value" style="font-size: 1.3em;">${group.stats.totalChecks.toLocaleString()}</div>
+                                <div class="stat-label">Total Checks</div>
+                            </div>
+                            <div class="stat-card" style="padding: 10px;">
+                                <div class="stat-value" style="font-size: 1.3em;">${group.stats.availableFound.toLocaleString()}</div>
+                                <div class="stat-label">Available Found</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <button class="btn btn-secondary btn-small" onclick="leaveGroup('${group.id}')">
+                                Leave Group
+                            </button>
+                            ${isOwner ? `
+                                <button class="btn btn-danger btn-small" onclick="deleteGroup('${group.id}')" 
+                                        style="margin-left: 10px;">
+                                    Delete Group
+                                </button>
+                            ` : ''}
+                            ${group.isPrivate ? `
+                                <div style="font-size: 12px; opacity: 0.7; margin-top: 10px;">
+                                    Invite Code: ${group.inviteCode}
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            myGroupsDiv.innerHTML = groupsHtml;
+        }
+
+        function leaveGroup(groupId) {
+            if (confirm('Are you sure you want to leave this group?')) {
+                const group = groups[groupId];
+                if (group) {
+                    group.members = group.members.filter(member => member !== currentUser.username);
+                    userGroups = userGroups.filter(g => g.id !== groupId);
+                    currentUser.groups = currentUser.groups.filter(id => id !== groupId);
+                    saveAllData();
+                    updateGroupsDisplay();
+                    showNotification('Left group successfully.', 'info');
+                }
+            }
+        }
+
+        function deleteGroup(groupId) {
+            if (confirm('Are you sure you want to delete this group? This action cannot be undone.')) {
+                delete groups[groupId];
+                userGroups = userGroups.filter(g => g.id !== groupId);
+                currentUser.groups = currentUser.groups.filter(id => id !== groupId);
+                saveAllData();
+                updateGroupsDisplay();
+                showNotification('Group deleted successfully.', 'success');
+            }
+        }
+
+        function generateInviteCode() {
+            return Math.random().toString(36).substring(2, 8).toUpperCase();
+        }
+
+        function updateLeaderboard() {
+            const leaderboardDiv = document.getElementById('globalLeaderboard');
+            
+            // Create mock leaderboard data based on special users
+            const leaderboardUsers = [
+                { username: 'ProHunter', checks: 45678, available: 3421, level: 42 },
+                { username: 'ExpertNamer', checks: 38291, available: 2987, level: 38 },
+                { username: 'FindifyOwner', checks: 35012, available: 2756, level: 35 },
+                { username: 'BetaTester1', checks: 29847, available: 2234, level: 30 },
+                { username: 'ExpertUserHelper', checks: 28456, available: 2145, level: 29 },
+                { username: 'FindifyAdmin', checks: 26834, available: 2023, level: 27 },
+                { username: 'DigitalNinja', checks: 24567, available: 1876, level: 25 },
+                { username: 'CodeMaster', checks: 23123, available: 1743, level: 23 },
+                { username: 'UsernameKing', checks: 21987, available: 1654, level: 22 },
+                { username: 'NameSeeker', checks: 20456, available: 1567, level: 21 }
+            ];
+
+            // Add current user if authenticated and has progress
+            if (currentUser && !currentUser.isGuest && currentUser.totalChecks > 0) {
+                leaderboardUsers.push({
+                    username: currentUser.username,
+                    checks: currentUser.totalChecks,
+                    available: currentUser.availableFound,
+                    level: currentUser.level || 1
+                });
+            }
+
+            // Sort by checks
+            leaderboardUsers.sort((a, b) => b.checks - a.checks);
+
+            let leaderboardHtml = '';
+            leaderboardUsers.forEach((user, index) => {
+                const isCurrentUser = currentUser && user.username === currentUser.username;
+                const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+                
+                leaderboardHtml += `
+                    <div class="question-item" style="${isCurrentUser ? 'border: 2px solid #64ffda;' : ''}">
+                        <div class="question-header">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 20px;">${rankEmoji}</span>
+                                <div class="question-author">
+                                    ${renderUserWithRole(user.username, true)}
+                                </div>
+                            </div>
+                            <div class="level-badge">Lv.${user.level}</div>
+                        </div>
+                        <div class="stats-grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px;">
+                            <div class="stat-card" style="padding: 8px;">
+                                <div class="stat-value" style="font-size: 1.1em;">${user.checks.toLocaleString()}</div>
+                                <div class="stat-label">Checks</div>
+                            </div>
+                            <div class="stat-card" style="padding: 8px;">
+                                <div class="stat-value" style="font-size: 1.1em;">${user.available.toLocaleString()}</div>
+                                <div class="stat-label">Found</div>
+                            </div>
+                            <div class="stat-card" style="padding: 8px;">
+                                <div class="stat-value" style="font-size: 1.1em;">${(user.available / user.checks * 100).toFixed(1)}%</div>
+                                <div class="stat-label">Rate</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            leaderboardDiv.innerHTML = leaderboardHtml;
+        }
+
+        // Experience and Level System
+        function addExperience(amount) {
+            if (!currentUser || currentUser.isGuest) return;
+            
+            const oldLevel = Math.floor(currentUser.experience / 100) + 1;
+            currentUser.experience += amount;
+            const newLevel = Math.floor(currentUser.experience / 100) + 1;
+            
+            if (newLevel > oldLevel) {
+                showNotification(`🎉 Level Up! You are now level ${newLevel}!`, 'success');
+                currentUser.level = newLevel;
+            }
+            
+            updateProfileDisplay();
+            autoSaveData(); // Auto-save when experience changes
+        }
+
+        function updateProfileDisplay() {
+            if (currentUser && !currentUser.isGuest) {
+                const level = currentUser.level || 1;
+                document.getElementById('currentLevel').textContent = level;
+            }
+        }
+
+        // Theme Management with Save
+        function onModeChange() {
+            const mode = document.getElementById('mode').value;
+            const customControls = document.getElementById('customThemeControls');
+            
+            if (mode === 'custom') {
+                customControls.style.display = 'block';
+            } else {
+                customControls.style.display = 'none';
+            }
+            
+            autoSaveData(); // Save control changes
+        }
+
+        function onCustomWordChange() {
+            const customWord = document.getElementById('customWord').value.trim();
+            const createBtn = document.getElementById('createThemeBtn');
+            
+            createBtn.disabled = !customWord || customWord.length < 2;
+        }
+
+        function createCustomTheme() {
+            const customWord = document.getElementById('customWord').value.trim().toLowerCase();
+            
+            if (!customWord || customWord.length < 2) {
+                showNotification('Please enter a valid theme word.', 'error');
+                return;
+            }
+
+            // Generate theme based on custom word
+            customThemes[customWord] = {
+                prefixes: [customWord, customWord + 'y', customWord + 'er', 'Cool' + customWord, 'Super' + customWord],
+                suffixes: ['Master', 'Pro', 'King', 'Lord', 'Star', 'Hero', 'Legend', 'Boss', 'Ace', 'Elite'],
+                connectors: ['', 'X', 'The', 'Is', 'My', '2024', '99']
+            };
+
+            showNotification(`Custom theme "${customWord}" created successfully!`, 'success');
+            
+            // Check for achievement
+            if (!statistics.achievements.has('theme_creator')) {
+                statistics.achievements.add('theme_creator');
+                statistics.achievementPoints += achievements.theme_creator.points;
+                showNotification(`🏆 Achievement Unlocked: ${achievements.theme_creator.name}!`, 'success');
+                addExperience(achievements.theme_creator.points);
+            }
+            
+            addExperience(10);
+            saveAllData();
+        }
+
+        function setTheme(theme) {
+            document.querySelectorAll('.theme-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            
+            event.target.classList.add('active');
+            appSettings.theme = theme;
+            
+            // Apply theme styles (basic implementation)
+            const root = document.documentElement;
+            
+            switch(theme) {
+                case 'cyberpunk':
+                    root.style.setProperty('--primary-gradient', 'linear-gradient(135deg, #ff006e, #8338ec)');
+                    break;
+                case 'nature':
+                    root.style.setProperty('--primary-gradient', 'linear-gradient(135deg, #40916c, #52b788)');
+                    break;
+                case 'dark':
+                    root.style.setProperty('--primary-gradient', 'linear-gradient(135deg, #212529, #495057)');
+                    break;
+                default:
+                    root.style.setProperty('--primary-gradient', 'linear-gradient(135deg, #1a1a2e, #16213e)');
+                    break;
+            }
+            
+            saveAllData();
+        }
+
+        // Utility Functions with Enhanced Save Functionality
+        function resetStatistics() {
+            if (confirm('This will reset your current session statistics. Your all-time stats and achievements will be preserved. Continue?')) {
+                // Only reset session statistics, preserve all-time stats
+                const allTimeStats = statistics.allTimeStats;
+                const achievements = statistics.achievements;
+                const achievementPoints = statistics.achievementPoints;
+                
+                statistics = {
+                    total: 0,
+                    available: 0,
+                    taken: 0,
+                    sessionStart: null,
+                    bestUsernames: [],
+                    modeStats: {},
+                    lengthStats: {},
+                    currentStreak: 0,
+                    bestStreak: 0,
+                    achievements: achievements,
+                    achievementPoints: achievementPoints,
+                    allTimeStats: allTimeStats
+                };
+                
+                // Don't clear usedNames completely, but reset for new session
+                usedNames.clear();
+                updateStatisticsDisplay();
+                updateQuickStats();
+                updateAchievementsDisplay();
+                
+                document.getElementById('resultsArea').innerHTML = '<div style="text-align: center; color: #888; margin-top: 150px;">Statistics reset. Click "Start Checking" to begin</div>';
+                document.getElementById('usedNamesCount').textContent = '0';
+                
+                saveAllData();
+                showNotification('Session statistics reset successfully.', 'success');
+            }
+        }
+
+        function exportStatistics() {
+            const exportData = {
+                version: '2.0',
+                type: 'statistics_export',
+                timestamp: new Date().toISOString(),
+                statistics: {
+                    ...statistics,
+                    achievements: Array.from(statistics.achievements)
+                },
+                user: currentUser ? {
+                    username: currentUser.username,
+                    level: currentUser.level,
+                    experience: currentUser.experience,
+                    totalChecks: currentUser.totalChecks,
+                    availableFound: currentUser.availableFound
+                } : null,
+                results: appSettings.saveResults ? savedResults.slice(-100) : [], // Last 100 results
+                customThemes: customThemes,
+                exportDate: new Date().toISOString()
+            };
+
+            downloadJson(exportData, `findify-stats-${new Date().toISOString().split('T')[0]}.json`);
+            
+            // Check for achievement
+            if (!statistics.achievements.has('data_manager')) {
+                statistics.achievements.add('data_manager');
+                statistics.achievementPoints += achievements.data_manager.points;
+                showNotification(`🏆 Achievement Unlocked: ${achievements.data_manager.name}!`, 'success');
+                addExperience(achievements.data_manager.points);
+                saveAllData();
+            }
+            
+            showNotification('Statistics exported successfully!', 'success');
+        }
+
+        // Settings Management with Enhanced Save
+        function openSettings() {
+            document.getElementById('navDropdown').classList.remove('show');
+            document.getElementById('settingsModal').classList.add('show');
+            
+            // Load current settings into UI
+            applySettings();
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('show');
+        }
+
+        // Help System
+        function openHelp() {
+            document.getElementById('navDropdown').classList.remove('show');
+            document.getElementById('helpModal').classList.add('show');
+        }
+
+        function closeHelp() {
+            document.getElementById('helpModal').classList.remove('show');
+        }
+
+        // Enhanced Notification System
+        function showNotification(message, type = 'info') {
+            // Check if notifications are enabled
+            if (!appSettings.notifications) return;
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'fadeOut 0.5s ease forwards';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 500);
+            }, 4000);
+        }
+
+        // Particle System
+        function createParticles() {
+            const particlesContainer = document.getElementById('floatingParticles');
+            
+            function createParticle() {
+                const particle = document.createElement('div');
+                particle.className = 'floating-particle';
+                
+                const size = Math.random() * 4 + 2;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDuration = (Math.random() * 3 + 5) + 's';
+                particle.style.animationDelay = Math.random() * 2 + 's';
+                
+                particlesContainer.appendChild(particle);
+                
+                setTimeout(() => {
+                    if (particle.parentNode) {
+                        particle.parentNode.removeChild(particle);
+                    }
+                }, 8000);
+            }
+            
+            // Create particles periodically
+            setInterval(createParticle, 300);
+        }
+
+        // Enhanced Initialize Application with Complete Data Management
+        function initializeApp() {
+            console.log('🚀 Initializing Findify with Enhanced Save System...');
+            
+            // Load all data from localStorage
+            loadAllData();
+            
+            // Apply loaded settings
+            applySettings();
+            
+            // Initialize UI components
+            createParticles();
+            updateStatisticsDisplay();
+            updateAchievementsDisplay();
+            
+            // Start auto-save if enabled
+            if (appSettings.autoSave) {
+                startAutoSave();
+            }
+            
+            // Start auto-backup if enabled
+            if (appSettings.autoBackup) {
+                startAutoBackup();
+            }
+            
+            // Update UI counters periodically
+            setInterval(() => {
+                document.getElementById('usedNamesCount').textContent = usedNames.size.toLocaleString();
+                
+                // Auto-save every few operations
+                if (statistics.total > 0 && statistics.total % 10 === 0 && appSettings.autoSave) {
+                    autoSaveData();
+                }
+            }, 1000);
+            
+            // Update session time periodically
+            setInterval(() => {
+                if (statistics.sessionStart) {
+                    updateStatisticsDisplay();
+                }
+            }, 1000);
+
+            // Show auth modal if not authenticated and not guest
+            if (!isAuthenticated && !currentUser) {
+                setTimeout(() => {
+                    document.getElementById('authModal').classList.remove('hide');
+                }, 500);
+            }
+
+            // Save data when page is about to unload
+            window.addEventListener('beforeunload', function() {
+                if (appSettings.autoSave) {
+                    saveAllData();
+                }
+            });
+
+            // Save data when visibility changes (tab switch, minimize, etc.)
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden && appSettings.autoSave) {
+                    saveAllData();
+                }
+            });
+
+            // Save control changes automatically
+            ['mode', 'style', 'length', 'includeNumbers', 'speed'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('change', autoSaveData);
+                }
+            });
+
+            console.log('✅ Findify initialized successfully with comprehensive save system!');
+            console.log(`📊 Loaded: ${Object.keys(users).length} users, ${questions.length} questions, ${Object.keys(groups).length} groups`);
+            console.log(`🏆 Achievements: ${statistics.achievements.size} unlocked, ${statistics.achievementPoints} points`);
+            console.log(`💾 Last save: ${lastSaveTime ? lastSaveTime.toLocaleString() : 'Never'}`);
+        }
+
+        // Start the application when DOM is ready
+        document.addEventListener('DOMContentLoaded', initializeApp);
+        
+        console.log('🔧 Findify Enhanced Save System loaded and ready!');
+    </script>
+</body>
+</html>
+            
