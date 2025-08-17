@@ -3211,24 +3211,24 @@
 
         // Enhanced checking system with save functionality
         async function checkUsername(username) {
-            try {
-                const response = await fetch(`https://your-render-service-name.onrender.com/check?username=${encodeURIComponent(username)}`);
-                const data = await response.json();
-                
-                return {
-                    username: username,
-                    available: data.available,
-                    robloxData: data.roblox
-                };
-            } catch (error) {
-                console.error('Error checking username:', error);
-                return {
-                    username: username,
-                    available: false,
-                    error: true
-                };
-            }
-        }
+    try {
+        // Replace with your Render URL
+        const response = await fetch(`https://findify-psef.onrender.com/check?username=${encodeURIComponent(username)}`);
+        const data = await response.json();
+        return {
+            username: username,
+            available: data.available,
+            robloxData: data.roblox
+        };
+    } catch (error) {
+        console.error('Error checking username:', error);
+        return {
+            username: username,
+            available: false,
+            error: true
+        };
+    }
+}
 
         async function startChecking() {
             if (isChecking) return;
