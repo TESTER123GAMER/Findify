@@ -3212,7 +3212,7 @@
         // Enhanced checking system with save functionality
         async function checkUsername(username) {
             try {
-                const response = await fetch(`http://localhost:5000/check?username=${encodeURIComponent(username)}`);
+                const response = await fetch(`https://your-render-service-name.onrender.com/check?username=${encodeURIComponent(username)}`);
                 const data = await response.json();
                 
                 return {
