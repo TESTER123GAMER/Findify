@@ -1,34 +1,41 @@
 import requests
 from flask import Flask, request, jsonify
-from datetime import datetime, timedelta
 import time
-import random
+import logging
+from datetime import datetime
 
 app = Flask(__name__)
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 # Configuration
 ROBLOX_API_URL = "https://auth.roblox.com/v1/usernames/validate"
-DEFAULT_DELAY = 1.0  # seconds between requests
+REQUEST_DELAY = 1.2  # seconds between requests to avoid rate limiting
 MAX_ATTEMPTS = 3
-PROXIES = None  # Can be set to {'http': 'http://proxy:port', 'https': 'https://proxy:port'}
+TIMEOUT = 10  # seconds
 
-# Rate limiting
+# Rate limiting tracking
 last_request_time = 0
-request_count = 0
-rate_limit_reset = 0
 
-def check_username(username):
-    global last_request_time, request_count, rate_limit_reset
+def make_roblox_request(username):
+    """Make request to Roblox API with proper rate limiting"""
+    global last_request_time
     
-    # Rate limiting
-    current_time = time.time()
-    if current_time < last_request_time + DEFAULT_DELAY:
-        time.sleep(DEFAULT_DELAY - (current_time - last_request_time))
+    # Enforce rate limiting
+    elapsed = time.time() - last_request_time
+    if elapsed < REQUEST_DELAY:
+        sleep_time = REQUEST_DELAY - elapsed
+        logger.info(f"Rate limiting: Sleeping {sleep_time:.2f} seconds")
+        time.sleep(sleep_time)
     
-    # Prepare request
     params = {
         "request.username": username,
-        "request.birthday": "2000-01-01",  # Default birthday
+        "request.birthday": "2000-01-01",
         "request.context": "Signup"
     }
     
@@ -37,99 +44,66 @@ def check_username(username):
         "Accept": "application/json",
     }
     
-    # Make request with retries
-    for attempt in range(MAX_ATTEMPTS):
-        try:
-            response = requests.get(
-                ROBLOX_API_URL,
-                params=params,
-                headers=headers,
-                proxies=PROXIES,
-                timeout=10
-            )
-            
-            # Update rate limiting tracking
-            last_request_time = time.time()
-            request_count += 1
-            
-            # Handle response
-            if response.status_code == 200:
-                data = response.json()
-                return {
-                    "username": username,
-                    "available": data.get("code") == 0,
-                    "status": "available" if data.get("code") == 0 else "taken",
-                    "message": data.get("message", ""),
-                    "code": data.get("code", -1)
-                }
-            elif response.status_code == 429:
-                # Rate limited - implement exponential backoff
-                retry_after = int(response.headers.get('Retry-After', 5))
-                time.sleep(retry_after + random.uniform(0, 1))
-                continue
-            else:
-                return {
-                    "username": username,
-                    "available": False,
-                    "status": "error",
-                    "message": f"API returned status {response.status_code}",
-                    "code": -1
-                }
-                
-        except requests.exceptions.RequestException as e:
-            if attempt == MAX_ATTEMPTS - 1:
-                return {
-                    "username": username,
-                    "available": False,
-                    "status": "error",
-                    "message": str(e),
-                    "code": -1
-                }
-            time.sleep(1 + attempt)  # Exponential backoff
+    last_request_time = time.time()
     
-    return {
+    try:
+        response = requests.get(
+            ROBLOX_API_URL,
+            params=params,
+            headers=headers,
+            timeout=TIMEOUT
+        )
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Request failed for {username}: {str(e)}")
+        return None
+
+@app.route('/check', methods=['GET'])
+def check_username():
+    username = request.args.get('username')
+    
+    if not username:
+        logger.warning("Missing username parameter")
+        return jsonify({"error": "Username parameter is required"}), 400
+    
+    logger.info(f"Checking username: {username}")
+    
+    for attempt in range(1, MAX_ATTEMPTS + 1):
+        result = make_roblox_request(username)
+        
+        if result is not None:
+            available = result.get("code", 1) == 0
+            return jsonify({
+                "username": username,
+                "available": available,
+                "status": "available" if available else "taken",
+                "message": result.get("message", ""),
+                "code": result.get("code", -1),
+                "attempts": attempt
+            })
+        
+        if attempt < MAX_ATTEMPTS:
+            retry_delay = attempt * 2  # Exponential backoff
+            logger.info(f"Retry {attempt} in {retry_delay} seconds...")
+            time.sleep(retry_delay)
+    
+    logger.error(f"Max attempts reached for {username}")
+    return jsonify({
         "username": username,
         "available": False,
         "status": "error",
         "message": "Max attempts reached",
         "code": -1
-    }
+    }), 503
 
-@app.route('/check', methods=['GET', 'POST'])
-def check_username_endpoint():
-    if request.method == 'POST':
-        data = request.get_json()
-        username = data.get('username')
-    else:
-        username = request.args.get('username')
-    
-    if not username:
-        return jsonify({"error": "Username parameter is required"}), 400
-    
-    result = check_username(username)
-    return jsonify(result)
-
-@app.route('/batch-check', methods=['POST'])
-def batch_check():
-    data = request.get_json()
-    if not data or 'usernames' not in data:
-        return jsonify({"error": "List of usernames is required"}), 400
-    
-    results = []
-    for username in data['usernames']:
-        results.append(check_username(username))
-        time.sleep(DEFAULT_DELAY)  # Respect rate limits
-    
-    return jsonify({"results": results})
-
-@app.route('/status')
-def status():
+@app.route('/health')
+def health_check():
     return jsonify({
-        "status": "running",
-        "last_request": datetime.fromtimestamp(last_request_time).isoformat() if last_request_time else None,
-        "request_count": request_count,
-        "rate_limit_reset": rate_limit_reset
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "version": "1.0.1"
     })
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, threaded=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
