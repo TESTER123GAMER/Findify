@@ -3212,17 +3212,16 @@
         // Enhanced checking system with save functionality
         async function checkUsername(username) {
             try {
-                // Simulate API call to Roblox
-                await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 200));
-                
-                // Simulate response (random for demo)
-                const isAvailable = Math.random() < 0.15; // 15% chance of being available
+                const response = await fetch(`http://localhost:5000/check?username=${encodeURIComponent(username)}`);
+                const data = await response.json();
                 
                 return {
                     username: username,
-                    available: isAvailable
+                    available: data.available,
+                    robloxData: data.roblox
                 };
             } catch (error) {
+                console.error('Error checking username:', error);
                 return {
                     username: username,
                     available: false,
