@@ -1,29 +1,40 @@
-import requests
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
+import requests
 
 app = Flask(__name__)
-CORS(app)  # enable CORS so browser can call this API
+CORS(app)  # Enable CORS for all routes
 
-@app.route("/check", methods=["GET"])
+@app.route('/')
+def health_check():
+    return jsonify({"status": "healthy"})
+
+@app.route('/check')
 def check_username():
-    username = request.args.get("username", "").strip()
+    username = request.args.get('username')
     if not username:
-        return jsonify({"ok": False, "message": "Missing ?username"}), 400
-
-    url = "https://auth.roblox.com/v1/usernames/validate"
-    params = {
-        "request.username": username,
-        "request.birthday": "2000-01-01",
-        "request.context": "Signup"
-    }
+        return jsonify({"error": "Username parameter is required"}), 400
+    
     try:
-        r = requests.get(url, params=params, timeout=5)
-        data = r.json()
-        available = data.get("code") == 0
-        return jsonify({"ok": True, "available": available, "roblox": data})
+        # Check Roblox username availability
+        response = requests.get(
+            f"https://api.roblox.com/users/get-by-username?username={username}",
+            timeout=5
+        )
+        data = response.json()
+        available = data.get("error") or not data.get("Id")
+        
+        return jsonify({
+            "username": username,
+            "available": available,
+            "robloxData": data
+        })
     except Exception as e:
-        return jsonify({"ok": False, "message": str(e)}), 500
+        return jsonify({
+            "error": True,
+            "message": str(e)
+        }), 500
 
-if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+if __name__ == '__main__':
+    # Critical change: Bind to 0.0.0.0 instead of 127.0.0.1
+    app.run(host='0.0.0.0', port=5000)
