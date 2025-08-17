@@ -435,6 +435,7 @@
                 <div class="dropdown" id="navDropdown">
                     <button class="dropdown-item" onclick="showProfile()">👤 Profile</button>
                     <button class="dropdown-item" onclick="showGroups()">👥 Groups</button>
+                    <button class="dropdown-item" onclick="showQA()">💬 Q&A</button>
                     <button class="dropdown-item" onclick="showLeaderboard()">🏆 Leaderboard</button>
                     <button class="dropdown-item" onclick="openSettings()">⚙️ Settings</button>
                     <button class="dropdown-item" onclick="openHelp()">❓ Help</button>
@@ -620,6 +621,60 @@
         </div>
     </div>
 
+    <!-- Q&A Modal -->
+    <div class="modal" id="qaModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 class="modal-title">💬 Q&A Community</h3>
+                <button class="close-btn" onclick="closeQA()">&times;</button>
+            </div>
+            <div id="qaContent">
+                <div style="margin-bottom: 20px;">
+                    <button class="btn btn-primary" onclick="showAskQuestion()" style="margin-right: 10px;">
+                        ➕ Ask Question
+                    </button>
+                    <button class="btn btn-secondary" onclick="showAnswerQuestion()">
+                        💡 Answer Questions
+                    </button>
+                </div>
+                
+                <div id="qaMainView">
+                    <h4>📝 Recent Questions</h4>
+                    <div id="questionsList">
+                        <!-- Questions will be loaded here -->
+                    </div>
+                </div>
+                
+                <div id="askQuestionView" style="display: none;">
+                    <h4>Ask a New Question</h4>
+                    <div class="form-group">
+                        <label for="questionTitle">Question Title:</label>
+                        <input type="text" class="form-control" id="questionTitle" 
+                               placeholder="What's your question about usernames or Findify?">
+                    </div>
+                    <div class="form-group">
+                        <label for="questionContent">Question Details:</label>
+                        <textarea class="form-control" id="questionContent" rows="4"
+                                  placeholder="Provide more details about your question..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="questionCategory">Category:</label>
+                        <select class="form-control" id="questionCategory">
+                            <option value="general">General</option>
+                            <option value="usernames">Username Tips</option>
+                            <option value="features">App Features</option>
+                            <option value="technical">Technical Issues</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary" onclick="submitQuestion()">Submit Question</button>
+                        <button class="btn btn-secondary" onclick="cancelAskQuestion()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Settings Modal -->
     <div class="modal" id="settingsModal">
         <div class="modal-content">
@@ -664,6 +719,7 @@
             currentUser: 'findify_current_user',
             users: 'findify_users',
             groups: 'findify_groups',
+            questions: 'findify_questions',
             statistics: 'findify_statistics',
             settings: 'findify_settings',
             usedNames: 'findify_used_names'
@@ -676,6 +732,8 @@
         let groups = {};
         let userGroups = [];
         let usedNames = new Set();
+        let questions = {}; // Q&A questions storage
+        let questionIdCounter = 1;
         let statistics = {
             total: 0,
             available: 0,
@@ -743,6 +801,9 @@
             // Save groups
             saveToStorage(STORAGE_KEYS.groups, groups);
             
+            // Save questions
+            saveToStorage(STORAGE_KEYS.questions, questions);
+            
             // Save statistics (convert Set to Array for JSON)
             const statsToSave = {
                 ...statistics,
@@ -762,6 +823,13 @@
             
             // Load groups  
             groups = loadFromStorage(STORAGE_KEYS.groups, {});
+            
+            // Load questions
+            questions = loadFromStorage(STORAGE_KEYS.questions, {});
+            
+            // Set question ID counter
+            const questionIds = Object.keys(questions).map(id => parseInt(id)).filter(id => !isNaN(id));
+            questionIdCounter = questionIds.length > 0 ? Math.max(...questionIds) + 1 : 1;
             
             // Load current user
             currentUser = loadFromStorage(STORAGE_KEYS.currentUser, null);
@@ -799,6 +867,9 @@
                 isAuthenticated = false;
                 updateUserDisplay();
             }
+            
+            // Initialize with sample Q&A data if none exists
+            initializeSampleQuestions();
             
             console.log('Data loaded successfully', { currentUser, isAuthenticated });
         }
@@ -1321,20 +1392,696 @@
             }
             
             const modal = document.getElementById('groupsModal');
-            const content = document.getElementById('groupsContent');
-            
-            content.innerHTML = `
-                <div style="text-align: center; margin: 50px 0; opacity: 0.7;">
-                    <h3>Groups Coming Soon!</h3>
-                    <p>Join groups to compete with friends and share your progress.</p>
-                </div>
-            `;
-            
+            loadGroupsContent();
             modal.classList.add('show');
         }
 
         function closeGroups() {
             document.getElementById('groupsModal').classList.remove('show');
+            // Reset to main view
+            const content = document.getElementById('groupsContent');
+            content.innerHTML = '';
+            loadGroupsContent();
+        }
+
+        function loadGroupsContent() {
+            const content = document.getElementById('groupsContent');
+            
+            // Get user's groups
+            const userGroupIds = currentUser.groups || [];
+            const userGroupsList = userGroupIds.map(id => groups[id]).filter(g => g);
+            
+            content.innerHTML = `
+                <div style="margin-bottom: 30px;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                        <button class="btn btn-primary" onclick="showCreateGroup()">
+                            ➕ Create Group
+                        </button>
+                        <button class="btn btn-secondary" onclick="showJoinGroup()">
+                            🔗 Join Group
+                        </button>
+                        <button class="btn btn-secondary" onclick="showPublicGroups()">
+                            🌍 Browse Public Groups
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="groupsMainContent">
+                    <h4>📋 My Groups (${userGroupsList.length})</h4>
+                    <div id="myGroupsList">
+                        ${userGroupsList.length > 0 ? renderMyGroups(userGroupsList) : `
+                            <div style="text-align: center; padding: 40px; opacity: 0.7;">
+                                <h4>No groups yet!</h4>
+                                <p>Create a group or join an existing one to compete with friends.</p>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderMyGroups(userGroups) {
+            return userGroups.map(group => {
+                const isOwner = group.owner === currentUser.username;
+                const memberCount = group.members ? group.members.length : 0;
+                const timeAgo = getTimeAgo(new Date(group.created));
+                
+                return `
+                    <div class="group-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 15px; padding: 20px; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: between; align-items: flex-start; margin-bottom: 15px;">
+                            <div style="flex: 1;">
+                                <h4 style="color: var(--accent-color); margin-bottom: 5px;">
+                                    ${group.isPrivate ? '🔒' : '🌍'} ${group.name}
+                                    ${isOwner ? '<span style="background: gold; color: black; padding: 2px 6px; border-radius: 4px; font-size: 0.7em; margin-left: 10px;">OWNER</span>' : ''}
+                                </h4>
+                                <p style="opacity: 0.8; margin-bottom: 10px;">${group.description}</p>
+                                <div style="font-size: 0.85em; opacity: 0.7;">
+                                    👥 ${memberCount} members • Created ${timeAgo} • ${group.isPrivate ? 'Private' : 'Public'}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="group-stats" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px;">
+                            <div style="text-align: center; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px;">
+                                <div style="font-weight: bold; color: var(--accent-color);">${getGroupTotalChecks(group)}</div>
+                                <div style="font-size: 0.8em; opacity: 0.7;">Total Checks</div>
+                            </div>
+                            <div style="text-align: center; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px;">
+                                <div style="font-weight: bold; color: var(--accent-color);">${getGroupTotalFound(group)}</div>
+                                <div style="font-size: 0.8em; opacity: 0.7;">Found Available</div>
+                            </div>
+                            <div style="text-align: center; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px;">
+                                <div style="font-weight: bold; color: var(--accent-color);">${getGroupAvgLevel(group)}</div>
+                                <div style="font-size: 0.8em; opacity: 0.7;">Avg Level</div>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <button class="btn btn-secondary" onclick="viewGroupDetails('${group.id}')" style="font-size: 0.85em; padding: 6px 12px;">
+                                📊 View Details
+                            </button>
+                            <button class="btn btn-secondary" onclick="leaveGroup('${group.id}')" style="font-size: 0.85em; padding: 6px 12px;">
+                                🚪 Leave Group
+                            </button>
+                            ${isOwner ? `
+                                <button class="btn btn-danger" onclick="deleteGroup('${group.id}')" style="font-size: 0.85em; padding: 6px 12px;">
+                                    🗑️ Delete
+                                </button>
+                            ` : ''}
+                            ${group.isPrivate ? `
+                                <div style="margin-left: auto; font-size: 0.8em; opacity: 0.7;">
+                                    Invite Code: <code>${group.inviteCode}</code>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showCreateGroup() {
+            const content = document.getElementById('groupsContent');
+            content.innerHTML = `
+                <div>
+                    <button class="btn btn-secondary" onclick="loadGroupsContent()" style="margin-bottom: 20px;">
+                        ← Back to Groups
+                    </button>
+                    
+                    <h4>Create New Group</h4>
+                    
+                    <div class="form-group">
+                        <label for="newGroupName">Group Name:</label>
+                        <input type="text" class="form-control" id="newGroupName" 
+                               placeholder="Enter group name" maxlength="30">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="newGroupDesc">Description:</label>
+                        <textarea class="form-control" id="newGroupDesc" rows="3"
+                                  placeholder="Describe your group's purpose"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="isPrivateGroup" style="margin-right: 8px;">
+                            Private Group (requires invite code to join)
+                        </label>
+                    </div>
+                    
+                    <div style="margin-top: 20px;">
+                        <button class="btn btn-primary" onclick="createGroup()">Create Group</button>
+                        <button class="btn btn-secondary" onclick="loadGroupsContent()">Cancel</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showJoinGroup() {
+            const content = document.getElementById('groupsContent');
+            content.innerHTML = `
+                <div>
+                    <button class="btn btn-secondary" onclick="loadGroupsContent()" style="margin-bottom: 20px;">
+                        ← Back to Groups
+                    </button>
+                    
+                    <h4>Join Group by Invite Code</h4>
+                    
+                    <div class="form-group">
+                        <label for="inviteCode">Invite Code:</label>
+                        <input type="text" class="form-control" id="inviteCode" 
+                               placeholder="Enter 6-character invite code" maxlength="6"
+                               style="text-transform: uppercase;">
+                    </div>
+                    
+                    <div style="margin-top: 20px;">
+                        <button class="btn btn-primary" onclick="joinGroupByCode()">Join Group</button>
+                        <button class="btn btn-secondary" onclick="loadGroupsContent()">Cancel</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showPublicGroups() {
+            const content = document.getElementById('groupsContent');
+            const publicGroups = Object.values(groups).filter(g => !g.isPrivate);
+            
+            content.innerHTML = `
+                <div>
+                    <button class="btn btn-secondary" onclick="loadGroupsContent()" style="margin-bottom: 20px;">
+                        ← Back to Groups
+                    </button>
+                    
+                    <h4>🌍 Public Groups</h4>
+                    
+                    <div id="publicGroupsList">
+                        ${publicGroups.length > 0 ? renderPublicGroups(publicGroups) : `
+                            <div style="text-align: center; padding: 40px; opacity: 0.7;">
+                                <h4>No public groups yet!</h4>
+                                <p>Be the first to create a public group for the community.</p>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderPublicGroups(publicGroups) {
+            return publicGroups.map(group => {
+                const memberCount = group.members ? group.members.length : 0;
+                const timeAgo = getTimeAgo(new Date(group.created));
+                const isAlreadyMember = currentUser.groups && currentUser.groups.includes(group.id);
+                
+                return `
+                    <div class="group-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 15px; padding: 20px; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: between; align-items: flex-start; margin-bottom: 15px;">
+                            <div style="flex: 1;">
+                                <h4 style="color: var(--accent-color); margin-bottom: 5px;">
+                                    🌍 ${group.name}
+                                </h4>
+                                <p style="opacity: 0.8; margin-bottom: 10px;">${group.description}</p>
+                                <div style="font-size: 0.85em; opacity: 0.7;">
+                                    👥 ${memberCount} members • Created by ${group.owner} • ${timeAgo}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            ${isAlreadyMember ? 
+                                '<span style="color: var(--accent-color); font-weight: bold;">✅ Already a member</span>' :
+                                `<button class="btn btn-primary" onclick="joinPublicGroup('${group.id}')" style="font-size: 0.85em; padding: 6px 12px;">
+                                    🚀 Join Group
+                                </button>`
+                            }
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function createGroup() {
+            const name = document.getElementById('newGroupName').value.trim();
+            const description = document.getElementById('newGroupDesc').value.trim();
+            const isPrivate = document.getElementById('isPrivateGroup').checked;
+            
+            if (!name || name.length < 3) {
+                showNotification('Group name must be at least 3 characters.', 'error');
+                return;
+            }
+            
+            if (!description || description.length < 10) {
+                showNotification('Group description must be at least 10 characters.', 'error');
+                return;
+            }
+            
+            const groupId = 'group_' + Date.now();
+            const inviteCode = isPrivate ? generateInviteCode() : null;
+            
+            const newGroup = {
+                id: groupId,
+                name: name,
+                description: description,
+                owner: currentUser.username,
+                members: [currentUser.username],
+                isPrivate: isPrivate,
+                inviteCode: inviteCode,
+                created: new Date().toISOString(),
+                stats: {
+                    totalChecks: 0,
+                    totalFound: 0
+                }
+            };
+            
+            groups[groupId] = newGroup;
+            
+            // Add group to user's groups
+            if (!currentUser.groups) currentUser.groups = [];
+            currentUser.groups.push(groupId);
+            
+            saveStoredData();
+            
+            showNotification(`Group "${name}" created successfully!`, 'success');
+            addExperience(25);
+            
+            loadGroupsContent();
+        }
+
+        function joinGroupByCode() {
+            const code = document.getElementById('inviteCode').value.trim().toUpperCase();
+            
+            if (!code || code.length !== 6) {
+                showNotification('Please enter a valid 6-character invite code.', 'error');
+                return;
+            }
+            
+            // Find group with this invite code
+            const group = Object.values(groups).find(g => g.inviteCode === code);
+            
+            if (!group) {
+                showNotification('Invalid invite code. Please check and try again.', 'error');
+                return;
+            }
+            
+            if (currentUser.groups && currentUser.groups.includes(group.id)) {
+                showNotification('You are already a member of this group.', 'info');
+                return;
+            }
+            
+            // Join the group
+            if (!group.members) group.members = [];
+            group.members.push(currentUser.username);
+            
+            if (!currentUser.groups) currentUser.groups = [];
+            currentUser.groups.push(group.id);
+            
+            saveStoredData();
+            
+            showNotification(`Successfully joined "${group.name}"!`, 'success');
+            addExperience(10);
+            
+            loadGroupsContent();
+        }
+
+        function joinPublicGroup(groupId) {
+            const group = groups[groupId];
+            if (!group) return;
+            
+            if (currentUser.groups && currentUser.groups.includes(groupId)) {
+                showNotification('You are already a member of this group.', 'info');
+                return;
+            }
+            
+            // Join the group
+            if (!group.members) group.members = [];
+            group.members.push(currentUser.username);
+            
+            if (!currentUser.groups) currentUser.groups = [];
+            currentUser.groups.push(groupId);
+            
+            saveStoredData();
+            
+            showNotification(`Successfully joined "${group.name}"!`, 'success');
+            addExperience(10);
+            
+            showPublicGroups(); // Refresh the view
+        }
+
+        function leaveGroup(groupId) {
+            if (confirm('Are you sure you want to leave this group?')) {
+                const group = groups[groupId];
+                if (group) {
+                    // Remove from group members
+                    group.members = group.members.filter(member => member !== currentUser.username);
+                    
+                    // Remove from user's groups
+                    currentUser.groups = currentUser.groups.filter(id => id !== groupId);
+                    
+                    saveStoredData();
+                    loadGroupsContent();
+                    showNotification('Left group successfully.', 'info');
+                }
+            }
+        }
+
+        function deleteGroup(groupId) {
+            if (confirm('Are you sure you want to delete this group? This action cannot be undone.')) {
+                const group = groups[groupId];
+                if (group && group.owner === currentUser.username) {
+                    // Remove from all members' groups
+                    Object.values(users).forEach(user => {
+                        if (user.groups) {
+                            user.groups = user.groups.filter(id => id !== groupId);
+                        }
+                    });
+                    
+                    // Delete the group
+                    delete groups[groupId];
+                    
+                    // Remove from current user's groups
+                    currentUser.groups = currentUser.groups.filter(id => id !== groupId);
+                    
+                    saveStoredData();
+                    loadGroupsContent();
+                    showNotification('Group deleted successfully.', 'success');
+                } else {
+                    showNotification('You can only delete groups you own.', 'error');
+                }
+            }
+        }
+
+        function viewGroupDetails(groupId) {
+            const group = groups[groupId];
+            if (!group) return;
+            
+            const content = document.getElementById('groupsContent');
+            const membersList = group.members ? group.members.map(username => {
+                const user = users[username] || { username, level: 1, totalChecks: 0, availableFound: 0 };
+                const isOwner = username === group.owner;
+                
+                return `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 8px;">
+                        <div>
+                            <strong>${username}</strong>
+                            ${isOwner ? '<span style="background: gold; color: black; padding: 2px 6px; border-radius: 4px; font-size: 0.7em; margin-left: 8px;">OWNER</span>' : ''}
+                            <div style="font-size: 0.8em; opacity: 0.7;">Level ${user.level || 1}</div>
+                        </div>
+                        <div style="text-align: right; font-size: 0.85em;">
+                            <div>${(user.totalChecks || 0).toLocaleString()} checks</div>
+                            <div style="opacity: 0.7;">${(user.availableFound || 0).toLocaleString()} found</div>
+                        </div>
+                    </div>
+                `;
+            }).join('') : '';
+            
+            content.innerHTML = `
+                <div>
+                    <button class="btn btn-secondary" onclick="loadGroupsContent()" style="margin-bottom: 20px;">
+                        ← Back to Groups
+                    </button>
+                    
+                    <div style="margin-bottom: 30px;">
+                        <h3 style="color: var(--accent-color);">
+                            ${group.isPrivate ? '🔒' : '🌍'} ${group.name}
+                        </h3>
+                        <p style="opacity: 0.8; margin: 10px 0;">${group.description}</p>
+                        <div style="font-size: 0.9em; opacity: 0.7;">
+                            Created by ${group.owner} • ${getTimeAgo(new Date(group.created))}
+                            ${group.isPrivate ? `<br>Invite Code: <code>${group.inviteCode}</code>` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px;">
+                        <div class="stat-card">
+                            <div class="stat-value">${getGroupTotalChecks(group)}</div>
+                            <div class="stat-label">Total Checks</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${getGroupTotalFound(group)}</div>
+                            <div class="stat-label">Found Available</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${group.members ? group.members.length : 0}</div>
+                            <div class="stat-label">Members</div>
+                        </div>
+                    </div>
+                    
+                    <h4>👥 Members (${group.members ? group.members.length : 0})</h4>
+                    <div style="margin-top: 15px;">
+                        ${membersList || '<p style="opacity: 0.7;">No members yet.</p>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Helper functions for group stats
+        function getGroupTotalChecks(group) {
+            if (!group.members) return 0;
+            return group.members.reduce((total, username) => {
+                const user = users[username];
+                return total + (user ? (user.totalChecks || 0) : 0);
+            }, 0).toLocaleString();
+        }
+
+        function getGroupTotalFound(group) {
+            if (!group.members) return 0;
+            return group.members.reduce((total, username) => {
+                const user = users[username];
+                return total + (user ? (user.availableFound || 0) : 0);
+            }, 0).toLocaleString();
+        }
+
+        function getGroupAvgLevel(group) {
+            if (!group.members || group.members.length === 0) return 0;
+            const totalLevels = group.members.reduce((total, username) => {
+                const user = users[username];
+                return total + (user ? (user.level || 1) : 1);
+            }, 0);
+            return Math.round(totalLevels / group.members.length);
+        }
+
+        function generateInviteCode() {
+            return Math.random().toString(36).substring(2, 8).toUpperCase();
+        }
+
+        // Q&A Functions
+        function showQA() {
+            document.getElementById('navDropdown').classList.remove('show');
+            const modal = document.getElementById('qaModal');
+            loadQuestions();
+            modal.classList.add('show');
+        }
+
+        function closeQA() {
+            document.getElementById('qaModal').classList.remove('show');
+            document.getElementById('qaMainView').style.display = 'block';
+            document.getElementById('askQuestionView').style.display = 'none';
+        }
+
+        function showAskQuestion() {
+            if (!currentUser || currentUser.isGuest) {
+                showNotification('Please create an account to ask questions.', 'info');
+                return;
+            }
+            
+            document.getElementById('qaMainView').style.display = 'none';
+            document.getElementById('askQuestionView').style.display = 'block';
+        }
+
+        function cancelAskQuestion() {
+            document.getElementById('qaMainView').style.display = 'block';
+            document.getElementById('askQuestionView').style.display = 'none';
+            
+            // Clear form
+            document.getElementById('questionTitle').value = '';
+            document.getElementById('questionContent').value = '';
+            document.getElementById('questionCategory').value = 'general';
+        }
+
+        function submitQuestion() {
+            const title = document.getElementById('questionTitle').value.trim();
+            const content = document.getElementById('questionContent').value.trim();
+            const category = document.getElementById('questionCategory').value;
+            
+            if (!title || title.length < 10) {
+                showNotification('Question title must be at least 10 characters.', 'error');
+                return;
+            }
+            
+            if (!content || content.length < 20) {
+                showNotification('Question details must be at least 20 characters.', 'error');
+                return;
+            }
+            
+            const questionId = questionIdCounter++;
+            const newQuestion = {
+                id: questionId,
+                title: title,
+                content: content,
+                category: category,
+                author: currentUser.username,
+                date: new Date().toISOString(),
+                answers: [],
+                votes: 0,
+                views: 0
+            };
+            
+            questions[questionId] = newQuestion;
+            saveStoredData();
+            
+            showNotification('Question posted successfully!', 'success');
+            addExperience(15);
+            
+            cancelAskQuestion();
+            loadQuestions();
+        }
+
+        function showAnswerQuestion() {
+            showNotification('Answer feature coming soon!', 'info');
+        }
+
+        function loadQuestions() {
+            const questionsList = document.getElementById('questionsList');
+            const questionsArray = Object.values(questions).sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            if (questionsArray.length === 0) {
+                questionsList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; opacity: 0.7;">
+                        <h4>No questions yet!</h4>
+                        <p>Be the first to ask a question about usernames or using Findify.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            questionsArray.forEach(question => {
+                const timeAgo = getTimeAgo(new Date(question.date));
+                const categoryEmoji = getCategoryEmoji(question.category);
+                
+                html += `
+                    <div class="question-item" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 15px; padding: 20px; margin-bottom: 15px;">
+                        <div class="question-header" style="display: flex; justify-content: between; align-items: flex-start; margin-bottom: 10px;">
+                            <div style="flex: 1;">
+                                <h4 style="color: var(--accent-color); margin-bottom: 5px;">${question.title}</h4>
+                                <div style="font-size: 0.9em; opacity: 0.8;">
+                                    ${categoryEmoji} ${question.category} • by ${question.author} • ${timeAgo}
+                                </div>
+                            </div>
+                            <div style="text-align: right; font-size: 0.85em; opacity: 0.7;">
+                                👁️ ${question.views} • 💬 ${question.answers.length} • ⭐ ${question.votes}
+                            </div>
+                        </div>
+                        <p style="margin-bottom: 15px; line-height: 1.5;">${question.content}</p>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-secondary" style="font-size: 0.85em; padding: 6px 12px;" onclick="viewQuestion(${question.id})">
+                                View Details
+                            </button>
+                            <button class="btn btn-secondary" style="font-size: 0.85em; padding: 6px 12px;" onclick="upvoteQuestion(${question.id})">
+                                ⭐ Upvote
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            questionsList.innerHTML = html;
+        }
+
+        function getCategoryEmoji(category) {
+            const emojis = {
+                general: '💭',
+                usernames: '🔤',
+                features: '⚡',
+                technical: '🔧'
+            };
+            return emojis[category] || '💭';
+        }
+
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMinutes = Math.floor(diffMs / (1000 * 60));
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            
+            if (diffMinutes < 1) return 'just now';
+            if (diffMinutes < 60) return `${diffMinutes}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            if (diffDays < 30) return `${diffDays}d ago`;
+            return date.toLocaleDateString();
+        }
+
+        function viewQuestion(questionId) {
+            const question = questions[questionId];
+            if (!question) return;
+            
+            question.views++;
+            saveStoredData();
+            
+            showNotification('Question viewing feature coming soon!', 'info');
+        }
+
+        function upvoteQuestion(questionId) {
+            const question = questions[questionId];
+            if (!question) return;
+            
+            if (!currentUser || currentUser.isGuest) {
+                showNotification('Please create an account to vote.', 'info');
+                return;
+            }
+            
+            question.votes++;
+            saveStoredData();
+            loadQuestions();
+            
+            showNotification('Question upvoted!', 'success');
+        }
+
+        function initializeSampleQuestions() {
+            // Only add sample questions if none exist
+            if (Object.keys(questions).length === 0) {
+                const sampleQuestions = [
+                    {
+                        id: 1,
+                        title: 'What makes a good username?',
+                        content: 'I\'m trying to find a unique username but struggling with ideas. What are the key elements that make a username memorable and good?',
+                        category: 'usernames',
+                        author: 'UsernameSeeker',
+                        date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+                        answers: [],
+                        votes: 5,
+                        views: 23
+                    },
+                    {
+                        id: 2,
+                        title: 'How does the username generator work?',
+                        content: 'I\'m curious about the algorithm behind the username generation. Does it check real platforms or just simulate availability?',
+                        category: 'technical',
+                        author: 'TechCurious',
+                        date: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), // 5 hours ago
+                        answers: [],
+                        votes: 3,
+                        views: 15
+                    },
+                    {
+                        id: 3,
+                        title: 'Can I suggest new themes?',
+                        content: 'Would love to see more theme options like space, nature, or cyberpunk themes for username generation.',
+                        category: 'features',
+                        author: 'ThemeExplorer',
+                        date: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 minutes ago
+                        answers: [],
+                        votes: 8,
+                        views: 42
+                    }
+                ];
+                
+                sampleQuestions.forEach(q => {
+                    questions[q.id] = q;
+                });
+                
+                questionIdCounter = 4;
+                saveStoredData();
+            }
         }
 
         function showLeaderboard() {
